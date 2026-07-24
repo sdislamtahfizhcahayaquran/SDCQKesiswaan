@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistem Kesiswaan — SDIT Cahaya Qur'an</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F5EF;
+    --surface:#FFFFFF;
+    --primary:#1C4A3E;
+    --primary-dark:#123229;
+    --accent:#C89B3C;
+    --text:#1F2420;
+    --muted:#6B7268;
+    --border:#E3E0D3;
+    --danger:#B3452C;
+    --success:#3F7A5C;
+    --warn:#B58A2E;
+    --radius:10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Plus Jakarta Sans', system-ui, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .brand-font{ font-family:'Fraunces', serif; }
+
+  /* ===== LOGIN ===== */
+  #login-screen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    padding:24px;
+  }
+  #login-screen::before{
+    content:"";
+    position:absolute;
+    top:-30%; left:50%;
+    width:900px; height:900px;
+    transform:translateX(-50%);
+    background:radial-gradient(circle, rgba(200,155,60,0.16) 0%, rgba(200,155,60,0) 65%);
+    pointer-events:none;
+  }
+  .login-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:40px 36px;
+    width:100%;
+    max-width:380px;
+    position:relative;
+    box-shadow:0 1px 2px rgba(18,50,41,0.04), 0 12px 32px rgba(18,50,41,0.06);
+  }
+  .login-logo{
+    width:52px; height:52px;
+    display:block;
+    margin:0 auto 18px;
+    border-radius:12px;
+    object-fit:cover;
+  }
+  .login-title{
+    text-align:center;
+    font-size:22px;
+    font-weight:600;
+    color:var(--primary-dark);
+    margin-bottom:2px;
+  }
+  .login-sub{
+    text-align:center;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:28px;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--primary-dark);
+    margin-bottom:6px;
+  }
+  .field input, .field select{
+    width:100%;
+    padding:11px 13px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-size:14px;
+    font-family:inherit;
+    background:#FCFBF8;
+    color:var(--text);
+    transition:border-color .15s;
+  }
+  .field input:focus, .field select:focus{
+    outline:none;
+    border-color:var(--primary);
+    background:#fff;
+  }
+  .btn{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:var(--primary);
+    color:#fff;
+    font-family:inherit;
+    font-size:14.5px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .btn:hover{ background:var(--primary-dark); }
+  .btn:disabled{ opacity:.55; cursor:not-allowed; }
+  .btn-outline{
+    background:transparent;
+    border:1px solid var(--border);
+    color:var(--primary-dark);
+  }
+  .btn-outline:hover{ background:#F0EEE4; }
+  .btn-sm{ width:auto; padding:8px 14px; font-size:13px; }
+
+  .login-error{
+    background:#FBEDE8;
+    color:var(--danger);
+    border:1px solid #F0D2C6;
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:13px;
+    margin-bottom:16px;
+    display:none;
+  }
+  .hash-link{
+    display:block;
+    text-align:center;
+    margin-top:20px;
+    font-size:11.5px;
+    color:var(--muted);
+    text-decoration:none;
+    opacity:.7;
+  }
+  .hash-link:hover{ opacity:1; }
+
+  /* ===== HASH GENERATOR (admin utility) ===== */
+  #hash-modal{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(18,50,41,0.45);
+    align-items:center; justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  #hash-modal .login-card{ max-width:380px; }
+  .hash-result{
+    background:#F0EEE4;
+    border:1px dashed var(--border);
+    border-radius:8px;
+    padding:10px 12px;
+    font-size:12px;
+    word-break:break-all;
+    font-family:monospace;
+    margin-top:10px;
+    color:var(--primary-dark);
+    display:none;
+  }
+
+  /* ===== APP SHELL ===== */
+  #app-screen{ display:none; min-height:100vh; }
+  .topbar{
+    background:var(--primary);
+    color:#fff;
+    padding:14px 22px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .topbar-left{ display:flex; align-items:center; gap:12px; }
+  .topbar-logo{ width:32px; height:32px; border-radius:8px; }
+  .topbar-title{ font-size:15px; font-weight:600; }
+  .topbar-title span{ display:block; font-size:11px; font-weight:400; opacity:.75; }
+  .topbar-right{ display:flex; align-items:center; gap:14px; font-size:13px; }
+  .topbar-right .role-badge{
+    background:rgba(255,255,255,0.14);
+    padding:4px 10px;
+    border-radius:20px;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.02em;
+  }
+  .logout-btn{
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.35);
+    color:#fff;
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:12.5px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .logout-btn:hover{ background:rgba(255,255,255,0.12); }
+
+  .layout{ display:flex; }
+  .sidebar{
+    width:220px;
+    min-height:calc(100vh - 61px);
+    background:var(--surface);
+    border-right:1px solid var(--border);
+    padding:14px 10px;
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--text);
+    cursor:pointer;
+    margin-bottom:2px;
+    position:relative;
+  }
+  .nav-item:hover{ background:#F0EEE4; }
+  .nav-item.active{ background:var(--primary); color:#fff; }
+  .nav-item.disabled{ color:var(--muted); cursor:default; opacity:.55; }
+  .nav-item.disabled:hover{ background:transparent; }
+  .nav-badge{
+    font-size:9px;
+    background:var(--accent);
+    color:#fff;
+    padding:1px 6px;
+    border-radius:10px;
+    margin-left:auto;
+  }
+  .nav-icon{ width:16px; height:16px; flex-shrink:0; }
+
+  .content{ flex:1; padding:26px 30px; max-width:900px; }
+  .page-title{ font-size:20px; font-weight:600; color:var(--primary-dark); margin-bottom:4px; }
+  .page-sub{ font-size:13px; color:var(--muted); margin-bottom:24px; }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:18px;
+  }
+  .card-title{ font-size:14.5px; font-weight:600; margin-bottom:14px; color:var(--primary-dark); }
+
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--muted);
+  }
+  .empty-state .icon{ font-size:32px; margin-bottom:10px; opacity:.5; }
+
+  /* Absensi module */
+  .rekap-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:18px; }
+  .rekap-box{
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:14px 10px;
+    text-align:center;
+  }
+  .rekap-box .num{ font-size:22px; font-weight:700; color:var(--primary-dark); }
+  .rekap-box .lbl{ font-size:11px; color:var(--muted); margin-top:2px; }
+
+  .siswa-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+    font-size:13.5px;
+  }
+  .siswa-row:last-child{ border-bottom:none; }
+  .siswa-name{ font-weight:500; }
+  .siswa-nis{ font-size:11.5px; color:var(--muted); }
+  .status-btns{ display:flex; gap:6px; }
+  .status-btn{
+    padding:6px 11px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-size:12px;
+    font-family:inherit;
+    cursor:pointer;
+    color:var(--muted);
+  }
+  .status-btn.sel-Hadir.selected{ background:var(--success); border-color:var(--success); color:#fff; }
+  .status-btn.sel-Sakit.selected{ background:var(--warn); border-color:var(--warn); color:#fff; }
+  .status-btn.sel-Izin.selected{ background:#7A8FA6; border-color:#7A8FA6; color:#fff; }
+  .status-btn.sel-Alfa.selected{ background:var(--danger); border-color:var(--danger); color:#fff; }
+
+  .foto-upload{
+    border:1.5px dashed var(--border);
+    border-radius:8px;
+    padding:16px;
+    text-align:center;
+    font-size:13px;
+    color:var(--muted);
+    cursor:pointer;
+    margin-bottom:16px;
+  }
+  .foto-upload.has-file{ border-color:var(--success); color:var(--success); }
+  #foto-preview{ max-width:100%; max-height:160px; border-radius:8px; margin-top:10px; display:none; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:var(--primary-dark); color:#fff;
+    padding:12px 20px; border-radius:8px; font-size:13.5px;
+    display:none; z-index:200;
+    box-shadow:0 8px 24px rgba(0,0,0,0.18);
+  }
+  .toast.error{ background:var(--danger); }
+
+  .spinner{
+    display:inline-block; width:14px; height:14px;
+    border:2px solid rgba(255,255,255,0.4);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    vertical-align:middle;
+    margin-right:6px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  @media (max-width:720px){
+    .layout{ flex-direction:column; }
+    .sidebar{ width:100%; display:flex; overflow-x:auto; min-height:auto; padding:10px; gap:4px; }
+    .nav-item{ white-space:nowrap; margin-bottom:0; }
+    .content{ padding:18px; }
+    .rekap-grid{ grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="login-screen">
+  <div class="login-card">
+    <img src="logo_sd.png" alt="Logo" class="login-logo" onerror="this.style.display='none'">
+    <div class="login-title brand-font">Sistem Kesiswaan</div>
+    <div class="login-sub">SD Islam Tahfizh Cahaya Qur'an</div>
+
+    <div class="login-error" id="login-error"></div>
+
+    <form id="login-form">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="login-username" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn" id="login-btn">Masuk</button>
+    </form>
+
+    <a href="#" class="hash-link" onclick="document.getElementById('hash-modal').style.display='flex'; return false;">generate password hash (admin)</a>
+  </div>
+</div>
+
+<!-- ============ HASH GENERATOR MODAL (admin utility, bukan bagian alur login user) ============ -->
+<div id="hash-modal">
+  <div class="login-card">
+    <div class="login-title brand-font" style="font-size:17px;">Generate Password Hash</div>
+    <div class="login-sub">Buat hash untuk diisi manual ke kolom PasswordHash di sheet Walas. Password asli tidak pernah tersimpan di mana pun.</div>
+    <div class="field">
+      <label>Username (harus sama persis dengan kolom Username)</label>
+      <input type="text" id="hash-username">
+    </div>
+    <div class="field">
+      <label>Password baru</label>
+      <input type="text" id="hash-password">
+    </div>
+    <button class="btn" onclick="generateHashUtil()">Buat Hash</button>
+    <div class="hash-result" id="hash-result"></div>
+    <button class="btn btn-outline btn-sm" style="width:100%; margin-top:12px;" onclick="document.getElementById('hash-modal').style.display='none'">Tutup</button>
+  </div>
+</div>
+
+<!-- ============ APP SCREEN ============ -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="logo_sd.png" class="topbar-logo" onerror="this.style.display='none'">
+      <div class="topbar-title">Sistem Kesiswaan<span>SDIT Cahaya Qur'an</span></div>
+    </div>
+    <div class="topbar-right">
+      <span id="user-name"></span>
+      <span class="role-badge" id="user-role"></span>
+      <button class="logout-btn" onclick="logout()">Keluar</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================================
+   KONFIGURASI — WAJIB DIISI SEBELUM DIPAKAI
+   ========================================================== */
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxv2Wf3ZEIa7gjEvONJwAMdQeg1HNzwI0fWhbKV5E6twoHMNKmVl3pDtCG05tf1Kc9sXw/exec';
+const APP_SECRET = 'MUss8dN31aFfnLE1sk81o1pqh1Xtf6L2KTA5JLVU'; // HARUS SAMA PERSIS dengan APP_SECRET di Code.gs
+
+/* ==========================================================
+   UTIL: hashing password (Web Crypto API, bawaan browser)
+   ========================================================== */
+async function sha256(text){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+async function hashPassword(username, password){
+  // username dipakai sebagai salt sederhana biar hash tidak sama walau passwordnya sama
+  return sha256(username.trim().toLowerCase() + ':' + password);
+}
+async function generateHashUtil(){
+  const u = document.getElementById('hash-username').value;
+  const p = document.getElementById('hash-password').value;
+  if(!u || !p){ alert('Isi username dan password dulu'); return; }
+  const hash = await hashPassword(u, p);
+  const el = document.getElementById('hash-result');
+  el.textContent = hash;
+  el.style.display = 'block';
+}
+
+/* ==========================================================
+   UTIL: panggil backend
+   ========================================================== */
+async function callApi(action, params={}){
+  const body = JSON.stringify({ action, secret: APP_SECRET, ...params });
+  const res = await fetch(APPS_SCRIPT_URL, { method:'POST', body });
+  const data = await res.json();
+  if(!data.success && action !== 'login'){
+    showToast(data.error || 'Terjadi kesalahan', true);
+  }
+  return data;
+}
+
+function showToast(msg, isError=false){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.style.display = 'block';
+  setTimeout(()=> t.style.display='none', 3200);
+}
+
+/* ==========================================================
+   AUTH & SESSION
+   ========================================================== */
+let currentUser = null;
+
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Memeriksa...';
+
+  try{
+    const passwordHash = await hashPassword(username, password);
+    const res = await callApi('login', { username, passwordHash });
+    if(res.success){
+      currentUser = res.user;
+      sessionStorage.setItem('kesiswaan_user', JSON.stringify(currentUser));
+      enterApp();
+    } else {
+      errEl.textContent = 'Username atau password salah.';
+      errEl.style.display = 'block';
+    }
+  } catch(err){
+    errEl.textContent = 'Gagal terhubung ke server. Cek koneksi internet.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Masuk';
+  }
+});
+
+function logout(){
+  sessionStorage.removeItem('kesiswaan_user');
+  currentUser = null;
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-form').reset();
+}
+
+// auto-login kalau masih ada session (sesi browser, hilang kalau tab ditutup)
+window.addEventListener('load', () => {
+  const saved = sessionStorage.getItem('kesiswaan_user');
+  if(saved){
+    currentUser = JSON.parse(saved);
+    enterApp();
+  }
+});
+
+/* ==========================================================
+   NAVIGASI MODUL
+   Untuk nambah modul baru: tambah 1 entri di array ini,
+   lalu buat fungsi render-nya (contoh: renderAbsensi).
+   ========================================================== */
+const MODULES = [
+  { id:'absensi',      label:'Absensi (Morning Talk)', roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderAbsensi },
+  { id:'kedisiplinan', label:'Kedisiplinan',           roles:['walas','kesiswaan','pimpinan'], built:false },
+  { id:'keterlambatan',label:'Keterlambatan',          roles:['walas','kesiswaan','pimpinan'], built:false },
+  { id:'pjbl',         label:'PJBL',                   roles:['walas','kesiswaan','pimpinan'], built:false },
+  { id:'masalah',      label:'Masalah Siswa',          roles:['walas','kesiswaan','pimpinan'], built:false },
+  { id:'prestasi',     label:'Prestasi / Lomba',       roles:['walas','kesiswaan','pimpinan'], built:false },
+  { id:'akademik',     label:'Akademik',                roles:['walas','kesiswaan','pimpinan'], built:false },
+  { id:'ekskul',       label:'Ekskul',                 roles:['walas','kesiswaan','pimpinan'], built:false },
+];
+
+let activeModule = 'absensi';
+
+function enterApp(){
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  document.getElementById('user-name').textContent = currentUser.nama;
+  document.getElementById('user-role').textContent = currentUser.role.toUpperCase();
+  renderSidebar();
+  setActiveModule('absensi');
+}
+
+function renderSidebar(){
+  const sidebar = document.getElementById('sidebar');
+  sidebar.innerHTML = '';
+  MODULES.filter(m => m.roles.includes(currentUser.role)).forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'nav-item' + (m.id === activeModule ? ' active' : '') + (!m.built ? ' disabled' : '');
+    div.innerHTML = `<span>${m.label}</span>` + (!m.built ? '<span class="nav-badge">segera</span>' : '');
+    if(m.built){
+      div.onclick = () => setActiveModule(m.id);
+    }
+    sidebar.appendChild(div);
+  });
+}
+
+function setActiveModule(id){
+  activeModule = id;
+  renderSidebar();
+  const mod = MODULES.find(m => m.id === id);
+  const content = document.getElementById('content');
+  if(mod && mod.built && mod.render){
+    mod.render(content);
+  } else {
+    content.innerHTML = `<div class="empty-state"><div class="icon">—</div>Modul ini belum dibangun.</div>`;
+  }
+}
+
+/* ==========================================================
+   MODUL: ABSENSI (Morning Talk)
+   Pola ini yang dipakai ulang untuk modul lain.
+   ========================================================== */
+let absensiState = { kelas:null, siswa:[], status:{}, fotoBase64:null, fotoMime:null };
+
+function renderAbsensi(content){
+  const isWalas = currentUser.role === 'walas';
+  content.innerHTML = `
+    <div class="page-title">Absensi — Morning Talk</div>
+    <div class="page-sub">Catat kehadiran siswa saat Morning Talk hari ini.</div>
+
+    ${!isWalas ? `
+    <div class="card">
+      <div class="card-title">Pilih Kelas</div>
+      <select id="kelas-select" class="field" style="padding:11px 13px;border:1px solid var(--border);border-radius:8px;width:100%;font-family:inherit;font-size:14px;">
+        <option value="">— pilih kelas —</option>
+      </select>
+    </div>` : ''}
+
+    <div id="absensi-body"></div>
+  `;
+
+  if(isWalas){
+    absensiState.kelas = currentUser.kelas;
+    loadAbsensiForKelas();
+  } else {
+    // Kesiswaan/Pimpinan: perlu daftar kelas. Karena belum ada endpoint "daftar semua kelas",
+    // sementara ambil dari sheet Walas via kelas yang sudah dipakai (bisa disempurnakan nanti
+    // dengan menambah action getDaftarKelas di Code.gs kalau builder Sheets kelas sudah lengkap).
+    const select = document.getElementById('kelas-select');
+    select.innerHTML += `<option disabled>— isi manual dulu, endpoint daftar kelas belum dibangun —</option>`;
+    const manualInput = document.createElement('input');
+    manualInput.placeholder = 'Ketik nama kelas persis, contoh: 1 Banin A';
+    manualInput.style.cssText = 'width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:8px;margin-top:10px;font-family:inherit;font-size:14px;';
+    manualInput.onchange = (e) => { absensiState.kelas = e.target.value.trim(); loadAbsensiForKelas(); };
+    document.querySelector('.card').appendChild(manualInput);
+  }
+}
+
+async function loadAbsensiForKelas(){
+  if(!absensiState.kelas) return;
+  const body = document.getElementById('absensi-body');
+  body.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(28,74,62,0.25)"></span>Memuat data...</div>`;
+
+  const cek = await callApi('getAbsensiHariIni', { kelas: absensiState.kelas });
+  if(cek.sudahAbsen){
+    renderAbsensiSudahDiisi(cek);
+    return;
+  }
+
+  const siswaRes = await callApi('getSiswaByKelas', { kelas: absensiState.kelas });
+  absensiState.siswa = siswaRes.data || [];
+  absensiState.status = {};
+  absensiState.siswa.forEach(s => absensiState.status[s.nis] = 'Hadir'); // default Hadir, tinggal ubah yang tidak hadir
+  renderAbsensiForm();
+}
+
+function renderAbsensiSudahDiisi(cek){
+  const body = document.getElementById('absensi-body');
+  body.innerHTML = `
+    <div class="card">
+      <div class="card-title">Sudah diisi hari ini</div>
+      <div class="rekap-grid">
+        <div class="rekap-box"><div class="num" style="color:var(--success)">${cek.rekap.Hadir}</div><div class="lbl">Hadir</div></div>
+        <div class="rekap-box"><div class="num" style="color:var(--warn)">${cek.rekap.Sakit}</div><div class="lbl">Sakit</div></div>
+        <div class="rekap-box"><div class="num" style="color:#7A8FA6">${cek.rekap.Izin}</div><div class="lbl">Izin</div></div>
+        <div class="rekap-box"><div class="num" style="color:var(--danger)">${cek.rekap.Alfa}</div><div class="lbl">Alfa</div></div>
+      </div>
+      <div style="font-size:12.5px;color:var(--muted)">Total tercatat: ${cek.total} siswa</div>
+    </div>
+  `;
+}
+
+function renderAbsensiForm(){
+  const body = document.getElementById('absensi-body');
+  if(absensiState.siswa.length === 0){
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Belum ada data siswa untuk kelas ini di sheet Siswa.</div>`;
+    return;
+  }
+
+  body.innerHTML = `
+    <div class="card">
+      <div class="card-title">Foto Kondisi Kelas</div>
+      <div class="foto-upload" id="foto-upload-box" onclick="document.getElementById('foto-input').click()">
+        Klik untuk unggah 1 foto suasana Morning Talk
+      </div>
+      <input type="file" id="foto-input" accept="image/*" style="display:none" onchange="handleFotoSelect(event)">
+      <img id="foto-preview">
+    </div>
+
+    <div class="card">
+      <div class="card-title">Kehadiran Siswa (${absensiState.siswa.length} siswa)</div>
+      <div id="siswa-list"></div>
+    </div>
+
+    <button class="btn" id="submit-absensi-btn" onclick="submitAbsensiForm()">Simpan Absensi</button>
+  `;
+
+  const list = document.getElementById('siswa-list');
+  absensiState.siswa.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'siswa-row';
+    row.innerHTML = `
+      <div><div class="siswa-name">${s.nama}</div><div class="siswa-nis">NIS ${s.nis}</div></div>
+      <div class="status-btns" data-nis="${s.nis}">
+        ${['Hadir','Sakit','Izin','Alfa'].map(st => `<button type="button" class="status-btn sel-${st} ${absensiState.status[s.nis]===st?'selected':''}" onclick="setStatus('${s.nis}','${st}')">${st}</button>`).join('')}
+      </div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function setStatus(nis, status){
+  absensiState.status[nis] = status;
+  document.querySelectorAll(`.status-btns[data-nis="${nis}"] .status-btn`).forEach(btn => {
+    btn.classList.toggle('selected', btn.classList.contains('sel-' + status));
+  });
+}
+
+function handleFotoSelect(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  absensiState.fotoMime = file.type;
+  const reader = new FileReader();
+  reader.onload = () => {
+    absensiState.fotoBase64 = reader.result.split(',')[1];
+    document.getElementById('foto-upload-box').textContent = 'Foto dipilih: ' + file.name;
+    document.getElementById('foto-upload-box').classList.add('has-file');
+    const preview = document.getElementById('foto-preview');
+    preview.src = reader.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitAbsensiForm(){
+  const btn = document.getElementById('submit-absensi-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Menyimpan...';
+
+  try{
+    let fotoUrl = '';
+    if(absensiState.fotoBase64){
+      const uploadRes = await callApi('uploadFotoMT', {
+        base64: absensiState.fotoBase64,
+        mimeType: absensiState.fotoMime,
+        filename: `MT_${absensiState.kelas}_${new Date().toISOString().slice(0,10)}.jpg`
+      });
+      if(uploadRes.success) fotoUrl = uploadRes.url;
+    }
+
+    const data = absensiState.siswa.map(s => ({ nis: s.nis, nama: s.nama, status: absensiState.status[s.nis] }));
+    const res = await callApi('submitAbsensi', {
+      kelas: absensiState.kelas,
+      dicatatOleh: currentUser.nama,
+      fotoUrl,
+      data
+    });
+
+    if(res.success){
+      showToast('Absensi berhasil disimpan');
+      loadAbsensiForKelas();
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Absensi';
+  }
+}
+</script>
+</body>
+</html>
