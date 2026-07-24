@@ -20,6 +20,15 @@
     --success:#3F7A5C;
     --warn:#B58A2E;
     --radius:10px;
+
+    /* Palet khusus layar login (merah, sesuai identitas visual yang diminta) */
+    --login-red:#B4272B;
+    --login-red-dark:#8C1C1F;
+    --login-blush-1:#FBEAE6;
+    --login-blush-2:#F6D9D3;
+    --login-ink:#241D1B;
+    --login-muted:#7A6E6A;
+    --login-border:#EFDCD7;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
@@ -35,49 +44,137 @@
   #login-screen{
     min-height:100vh;
     display:flex;
-    align-items:center;
-    justify-content:center;
+    background:var(--surface);
+  }
+
+  /* -- Panel kiri: identitas sekolah -- */
+  .login-hero{
+    flex:1 1 46%;
+    max-width:620px;
     position:relative;
     overflow:hidden;
-    padding:24px;
+    display:flex;
+    flex-direction:column;
+    padding:56px 52px 0;
+    background:linear-gradient(175deg, var(--login-blush-1) 0%, var(--login-blush-2) 100%);
   }
-  #login-screen::before{
+  .login-hero::before{
     content:"";
     position:absolute;
-    top:-30%; left:50%;
-    width:900px; height:900px;
-    transform:translateX(-50%);
-    background:radial-gradient(circle, rgba(200,155,60,0.16) 0%, rgba(200,155,60,0) 65%);
+    right:-160px; bottom:120px;
+    width:420px; height:420px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(180,39,43,0.10) 0%, rgba(180,39,43,0) 70%);
     pointer-events:none;
+  }
+  .login-hero-brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:40px;
+    position:relative;
+    z-index:2;
+  }
+  .login-hero-logo{
+    width:42px; height:42px;
+    object-fit:contain;
+    flex-shrink:0;
+    filter: grayscale(1) sepia(1) hue-rotate(-52deg) saturate(6) brightness(0.82) contrast(1.05);
+  }
+  .login-hero-brand-text{ line-height:1.25; }
+  .login-hero-brand-text .l1{
+    font-size:12.5px; font-weight:700; letter-spacing:.03em;
+    color:var(--login-ink); text-transform:uppercase;
+  }
+  .login-hero-brand-text .l2{
+    font-size:15px; font-weight:700; letter-spacing:.02em;
+    color:var(--login-red); text-transform:uppercase;
+  }
+  .login-hero-rule{
+    width:34px; height:3px; border-radius:2px;
+    background:var(--login-red);
+    margin-bottom:18px;
+    position:relative; z-index:2;
+  }
+  .login-hero h1{
+    font-size:32px;
+    font-weight:700;
+    line-height:1.2;
+    color:var(--login-ink);
+    margin-bottom:14px;
+    position:relative; z-index:2;
+  }
+  .login-hero h1 span{ color:var(--login-red); display:block; }
+  .login-hero p.lead{
+    font-size:14px;
+    color:var(--login-muted);
+    line-height:1.6;
+    max-width:400px;
+    margin-bottom:24px;
+    position:relative; z-index:2;
+  }
+  .login-quote{
+    background:rgba(255,255,255,0.55);
+    border:1px solid rgba(180,39,43,0.14);
+    border-radius:12px;
+    padding:16px 18px;
+    max-width:400px;
+    font-size:13px;
+    color:var(--login-ink);
+    line-height:1.55;
+    position:relative; z-index:2;
+    margin-bottom:20px;
+  }
+  .login-quote .mark{ color:var(--login-red); font-size:20px; font-weight:700; line-height:1; display:block; margin-bottom:4px; }
+  .login-quote cite{ display:block; margin-top:8px; font-style:normal; font-size:12px; color:var(--login-muted); }
+
+  .login-hero-photo-wrap{
+    margin-top:auto;
+    position:relative;
+    height:200px;
+    overflow:hidden;
+    border-radius:20px 20px 0 0;
+  }
+  .login-hero-photo-wrap img{
+    width:100%; height:100%;
+    object-fit:cover;
+    object-position:top center;
+    display:block;
+    filter: grayscale(1) sepia(1) hue-rotate(-52deg) saturate(5.5) brightness(0.95) contrast(1.05);
+  }
+  .login-hero-photo-wrap::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(251,234,230,0.85) 0%, rgba(251,234,230,0) 28%);
+  }
+
+  /* -- Panel kanan: form -- */
+  .login-form-panel{
+    flex:1 1 54%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    position:relative;
   }
   .login-card{
     background:var(--surface);
-    border:1px solid var(--border);
+    border:1px solid var(--login-border);
     border-radius:16px;
-    padding:40px 36px;
+    padding:44px 40px;
     width:100%;
-    max-width:380px;
-    position:relative;
-    box-shadow:0 1px 2px rgba(18,50,41,0.04), 0 12px 32px rgba(18,50,41,0.06);
-  }
-  .login-logo{
-    width:52px; height:52px;
-    display:block;
-    margin:0 auto 18px;
-    border-radius:12px;
-    object-fit:cover;
+    max-width:400px;
+    box-shadow:0 1px 2px rgba(36,29,27,0.03), 0 20px 44px rgba(36,29,27,0.07);
   }
   .login-title{
-    text-align:center;
     font-size:22px;
-    font-weight:600;
-    color:var(--primary-dark);
-    margin-bottom:2px;
+    font-weight:700;
+    color:var(--login-ink);
+    margin-bottom:4px;
   }
   .login-sub{
-    text-align:center;
     font-size:13px;
-    color:var(--muted);
+    color:var(--login-muted);
     margin-bottom:28px;
   }
   .field{ margin-bottom:16px; }
@@ -85,23 +182,39 @@
     display:block;
     font-size:12.5px;
     font-weight:600;
-    color:var(--primary-dark);
+    color:var(--login-ink);
     margin-bottom:6px;
   }
+  .input-icon-wrap{ position:relative; }
+  .input-icon-wrap > svg{
+    position:absolute; left:13px; top:50%; transform:translateY(-50%);
+    width:16px; height:16px;
+    stroke:var(--login-red);
+    pointer-events:none;
+  }
+  .input-icon-wrap input{ padding-left:38px; }
+  .toggle-pass{
+    position:absolute; right:11px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; padding:4px;
+    color:var(--login-muted); display:flex; align-items:center; justify-content:center;
+    line-height:0;
+  }
+  .toggle-pass svg{ position:static; width:16px; height:16px; stroke:currentColor; transform:none; }
+
   .field input, .field select{
     width:100%;
     padding:11px 13px;
-    border:1px solid var(--border);
+    border:1px solid var(--login-border);
     border-radius:8px;
     font-size:14px;
     font-family:inherit;
-    background:#FCFBF8;
+    background:#FDFAF9;
     color:var(--text);
     transition:border-color .15s;
   }
   .field input:focus, .field select:focus{
     outline:none;
-    border-color:var(--primary);
+    border-color:var(--login-red);
     background:#fff;
   }
   .btn{
@@ -127,6 +240,9 @@
   .btn-outline:hover{ background:#F0EEE4; }
   .btn-sm{ width:auto; padding:8px 14px; font-size:13px; }
 
+  #login-form .btn{ background:var(--login-red); }
+  #login-form .btn:hover{ background:var(--login-red-dark); }
+
   .login-error{
     background:#FBEDE8;
     color:var(--danger);
@@ -137,38 +253,26 @@
     margin-bottom:16px;
     display:none;
   }
-  .hash-link{
-    display:block;
+  .login-help{
     text-align:center;
-    margin-top:20px;
-    font-size:11.5px;
-    color:var(--muted);
-    text-decoration:none;
-    opacity:.7;
-  }
-  .hash-link:hover{ opacity:1; }
-
-  /* ===== HASH GENERATOR (admin utility) ===== */
-  #hash-modal{
-    display:none;
-    position:fixed; inset:0;
-    background:rgba(18,50,41,0.45);
-    align-items:center; justify-content:center;
-    z-index:100;
-    padding:20px;
-  }
-  #hash-modal .login-card{ max-width:380px; }
-  .hash-result{
-    background:#F0EEE4;
-    border:1px dashed var(--border);
-    border-radius:8px;
-    padding:10px 12px;
     font-size:12px;
-    word-break:break-all;
-    font-family:monospace;
-    margin-top:10px;
-    color:var(--primary-dark);
-    display:none;
+    color:var(--login-muted);
+    margin-top:22px;
+  }
+  .login-footer{
+    position:absolute;
+    bottom:18px; left:0; right:0;
+    text-align:center;
+    font-size:11.5px;
+    color:var(--login-muted);
+  }
+
+  @media (max-width:860px){
+    #login-screen{ flex-direction:column; }
+    .login-hero{ max-width:none; padding:36px 28px 0; }
+    .login-hero h1{ font-size:26px; }
+    .login-hero-photo-wrap{ height:140px; }
+    .login-form-panel{ padding:28px 20px 60px; }
   }
 
   /* ===== APP SHELL ===== */
@@ -345,45 +449,64 @@
 
 <!-- ============ LOGIN SCREEN ============ -->
 <div id="login-screen">
-  <div class="login-card">
-    <img src="logo_sd.png" alt="Logo" class="login-logo" onerror="this.style.display='none'">
-    <div class="login-title brand-font">Sistem Kesiswaan</div>
-    <div class="login-sub">SD Islam Tahfizh Cahaya Qur'an</div>
 
-    <div class="login-error" id="login-error"></div>
-
-    <form id="login-form">
-      <div class="field">
-        <label>Username</label>
-        <input type="text" id="login-username" autocomplete="username" required>
+  <!-- Panel kiri: identitas sekolah -->
+  <div class="login-hero">
+    <div class="login-hero-brand">
+      <img src="logo_sd.png" alt="Logo SDIT Cahaya Qur'an" class="login-hero-logo" onerror="this.style.display='none'">
+      <div class="login-hero-brand-text">
+        <div class="l1">SD Islam Tahfizh</div>
+        <div class="l2">Cahaya Qur'an</div>
       </div>
-      <div class="field">
-        <label>Password</label>
-        <input type="password" id="login-password" autocomplete="current-password" required>
-      </div>
-      <button type="submit" class="btn" id="login-btn">Masuk</button>
-    </form>
+    </div>
 
-    <a href="#" class="hash-link" onclick="document.getElementById('hash-modal').style.display='flex'; return false;">generate password hash (admin)</a>
+    <div class="login-hero-rule"></div>
+    <h1>Sistem Kesiswaan<span>SD Islam Tahfizh Cahaya Qur'an</span></h1>
+    <p class="lead">Sistem terpadu untuk mencatat kehadiran, kedisiplinan, dan perkembangan siswa setiap hari.</p>
+
+    <div class="login-quote">
+      <span class="mark">&ldquo;</span>
+      Didiklah anak-anakmu dengan Al-Qur'an, karena ia akan menjadi penyejuk hati di dunia dan akhirat.
+      <cite>— HR. Ahmad</cite>
+    </div>
+
+    <div class="login-hero-photo-wrap">
+      <img src="gedung.png" alt="Gedung SDIT Cahaya Qur'an" onerror="this.parentElement.style.display='none'">
+    </div>
   </div>
-</div>
 
-<!-- ============ HASH GENERATOR MODAL (admin utility, bukan bagian alur login user) ============ -->
-<div id="hash-modal">
-  <div class="login-card">
-    <div class="login-title brand-font" style="font-size:17px;">Generate Password Hash</div>
-    <div class="login-sub">Buat hash untuk diisi manual ke kolom PasswordHash di sheet Walas. Password asli tidak pernah tersimpan di mana pun.</div>
-    <div class="field">
-      <label>Username (harus sama persis dengan kolom Username)</label>
-      <input type="text" id="hash-username">
+  <!-- Panel kanan: form login -->
+  <div class="login-form-panel">
+    <div class="login-card">
+      <div class="login-title">Selamat Datang Kembali!</div>
+      <div class="login-sub">Silakan masuk ke akun Anda untuk melanjutkan.</div>
+
+      <div class="login-error" id="login-error"></div>
+
+      <form id="login-form">
+        <div class="field">
+          <label>Username</label>
+          <div class="input-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" id="login-username" autocomplete="username" required>
+          </div>
+        </div>
+        <div class="field">
+          <label>Kata Sandi</label>
+          <div class="input-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" id="login-password" autocomplete="current-password" required style="padding-right:38px;">
+            <button type="button" class="toggle-pass" id="toggle-pass" aria-label="Tampilkan kata sandi">
+              <svg id="toggle-pass-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn" id="login-btn">Masuk</button>
+      </form>
+
+      <div class="login-help">Lupa kata sandi? Hubungi admin sekolah.</div>
     </div>
-    <div class="field">
-      <label>Password baru</label>
-      <input type="text" id="hash-password">
-    </div>
-    <button class="btn" onclick="generateHashUtil()">Buat Hash</button>
-    <div class="hash-result" id="hash-result"></div>
-    <button class="btn btn-outline btn-sm" style="width:100%; margin-top:12px;" onclick="document.getElementById('hash-modal').style.display='none'">Tutup</button>
+    <div class="login-footer">© 2026 SD Islam Tahfizh Cahaya Qur'an</div>
   </div>
 </div>
 
@@ -427,16 +550,6 @@ async function hashPassword(username, password){
   // username dipakai sebagai salt sederhana biar hash tidak sama walau passwordnya sama
   return sha256(username.trim().toLowerCase() + ':' + password);
 }
-async function generateHashUtil(){
-  const u = document.getElementById('hash-username').value;
-  const p = document.getElementById('hash-password').value;
-  if(!u || !p){ alert('Isi username dan password dulu'); return; }
-  const hash = await hashPassword(u, p);
-  const el = document.getElementById('hash-result');
-  el.textContent = hash;
-  el.style.display = 'block';
-}
-
 /* ==========================================================
    UTIL: panggil backend
    ========================================================== */
@@ -457,6 +570,16 @@ function showToast(msg, isError=false){
   t.style.display = 'block';
   setTimeout(()=> t.style.display='none', 3200);
 }
+
+/* ==========================================================
+   TAMPIL/SEMBUNYIKAN KATA SANDI
+   ========================================================== */
+document.getElementById('toggle-pass').addEventListener('click', () => {
+  const input = document.getElementById('login-password');
+  const isHidden = input.type === 'password';
+  input.type = isHidden ? 'text' : 'password';
+  document.getElementById('toggle-pass').setAttribute('aria-label', isHidden ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+});
 
 /* ==========================================================
    AUTH & SESSION
@@ -568,7 +691,7 @@ function setActiveModule(id){
    MODUL: ABSENSI (Morning Talk)
    Pola ini yang dipakai ulang untuk modul lain.
    ========================================================== */
-let absensiState = { kelas:null, siswa:[], status:{}, fotoBase64:null, fotoMime:null };
+let absensiState = { kelas:null, siswa:[], status:{}, tema:'', fotoBase64:null, fotoMime:null };
 
 function renderAbsensi(content){
   const isWalas = currentUser.role === 'walas';
@@ -618,6 +741,7 @@ async function loadAbsensiForKelas(){
   const siswaRes = await callApi('getSiswaByKelas', { kelas: absensiState.kelas });
   absensiState.siswa = siswaRes.data || [];
   absensiState.status = {};
+  absensiState.tema = '';
   absensiState.siswa.forEach(s => absensiState.status[s.nis] = 'Hadir'); // default Hadir, tinggal ubah yang tidak hadir
   renderAbsensiForm();
 }
@@ -627,6 +751,7 @@ function renderAbsensiSudahDiisi(cek){
   body.innerHTML = `
     <div class="card">
       <div class="card-title">Sudah diisi hari ini</div>
+      ${cek.temaMT ? `<div style="font-size:13.5px; margin-bottom:14px;"><strong>Tema Morning Talk:</strong> ${cek.temaMT}</div>` : `<div style="font-size:12.5px; color:var(--muted); margin-bottom:14px;">Tema Morning Talk belum diisi.</div>`}
       <div class="rekap-grid">
         <div class="rekap-box"><div class="num" style="color:var(--success)">${cek.rekap.Hadir}</div><div class="lbl">Hadir</div></div>
         <div class="rekap-box"><div class="num" style="color:var(--warn)">${cek.rekap.Sakit}</div><div class="lbl">Sakit</div></div>
@@ -646,6 +771,13 @@ function renderAbsensiForm(){
   }
 
   body.innerHTML = `
+    <div class="card">
+      <div class="card-title">Tema Morning Talk</div>
+      <input type="text" id="tema-input" placeholder="Contoh: Adab kepada orang tua" value="${absensiState.tema || ''}"
+        style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;"
+        oninput="absensiState.tema = this.value">
+    </div>
+
     <div class="card">
       <div class="card-title">Foto Kondisi Kelas</div>
       <div class="foto-upload" id="foto-upload-box" onclick="document.getElementById('foto-input').click()">
@@ -702,6 +834,14 @@ function handleFotoSelect(e){
 
 async function submitAbsensiForm(){
   const btn = document.getElementById('submit-absensi-btn');
+  const temaInput = document.getElementById('tema-input');
+  if(temaInput) absensiState.tema = temaInput.value.trim();
+
+  if(!absensiState.tema){
+    showToast('Isi dulu tema Morning Talk hari ini', true);
+    return;
+  }
+
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Menyimpan...';
 
@@ -719,6 +859,7 @@ async function submitAbsensiForm(){
     const data = absensiState.siswa.map(s => ({ nis: s.nis, nama: s.nama, status: absensiState.status[s.nis] }));
     const res = await callApi('submitAbsensi', {
       kelas: absensiState.kelas,
+      temaMT: absensiState.tema,
       dicatatOleh: currentUser.nama,
       fotoUrl,
       data
