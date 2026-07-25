@@ -515,6 +515,87 @@
     border-radius:8px; padding:9px 11px; font-size:12.5px; margin-bottom:14px; display:none;
   }
 
+  /* ===== MODUL PjBL ===== */
+  .pekan-badge{
+    display:inline-block;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:4px 12px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--primary-dark);
+    margin-left:8px;
+  }
+  .legend-skala{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:16px;
+    font-size:11.5px;
+  }
+  .legend-skala span{
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:4px 8px;
+    color:var(--muted);
+  }
+  .legend-skala b{ color:var(--text); }
+  .nilai-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:9px 0;
+    border-bottom:1px solid var(--border);
+    font-size:13.5px;
+  }
+  .nilai-row:last-child{ border-bottom:none; }
+  /* Input nilai polos: tanpa tombol stepper naik-turun */
+  .nilai-input{
+    width:52px;
+    text-align:center;
+    padding:9px 0;
+    border:1.5px solid var(--border);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:700;
+    color:var(--primary-dark);
+    background:#FDFCFA;
+    -moz-appearance:textfield;
+  }
+  .nilai-input::-webkit-outer-spin-button,
+  .nilai-input::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .nilai-input:focus{
+    outline:none;
+    border-color:var(--primary);
+    background:#fff;
+  }
+  .nilai-input.terisi{ border-color:var(--success); }
+  .textarea-field{
+    width:100%;
+    padding:11px 13px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:14px;
+    resize:vertical;
+    min-height:70px;
+  }
+  .textarea-field:focus{ outline:none; border-color:var(--primary); background:#fff; }
+  .pekan-select{
+    padding:9px 12px;
+    border:1px solid var(--border);
+    border-radius:8px;
+    font-family:inherit;
+    font-size:13.5px;
+    background:#fff;
+  }
+
   @media (max-width:720px){
     .layout{ flex-direction:column; }
     .sidebar{ width:100%; display:flex; overflow-x:auto; min-height:auto; padding:10px; gap:4px; }
@@ -1011,9 +1092,9 @@ async function submitGantiUsername(e){
    ========================================================== */
 const MODULES = [
   { id:'absensi',      label:'Absensi (Morning Talk)', roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderAbsensi },
+  { id:'pjbl',         label:'PJBL',                   roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderPjBL },
   { id:'kedisiplinan', label:'Kedisiplinan',           roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'keterlambatan',label:'Keterlambatan',          roles:['walas','kesiswaan','pimpinan'], built:false },
-  { id:'pjbl',         label:'PJBL',                   roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'masalah',      label:'Masalah Siswa',          roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'prestasi',     label:'Prestasi / Lomba',       roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'akademik',     label:'Akademik',                roles:['walas','kesiswaan','pimpinan'], built:false },
@@ -1242,6 +1323,257 @@ async function submitAbsensiForm(){
   } finally {
     btn.disabled = false;
     btn.textContent = 'Simpan Absensi';
+  }
+}
+
+/* ==========================================================
+   MODUL: PjBL
+   Per pekan: 1 nilai keaktifan (1-4) per siswa + timeline (realita/
+   kendala/masukan) per kelas + 1 foto kegiatan. Pekan aktif disarankan
+   otomatis dari tanggal hari ini (sheet "Time Line"), tapi guru bisa
+   pindah ke pekan lain lewat dropdown untuk mengisi/mengubah data.
+   ========================================================== */
+let pjblState = {
+  kelas:null, jenjang:null, pekan:null, daftarPekan:[], kegiatanRencana:'',
+  siswa:[], nilai:{}, realita:'', kendala:'', masukan:'',
+  fotoBase64:null, fotoMime:null, fotoUrlLama:''
+};
+
+function renderPjBL(content){
+  const isWalas = currentUser.role === 'walas';
+  content.innerHTML = `
+    <div class="page-title">PJBL — Project Based Learning</div>
+    <div class="page-sub">Catat nilai keaktifan, timeline kegiatan, dan foto tiap pekan proyek.</div>
+
+    ${!isWalas ? `
+    <div class="card">
+      <div class="card-title">Pilih Kelas</div>
+      <input type="text" id="pjbl-kelas-input" placeholder="Ketik nama kelas persis, contoh: 1 Banin A"
+        style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
+    </div>` : ''}
+
+    <div id="pjbl-body"></div>
+  `;
+
+  if(isWalas){
+    pjblState.kelas = currentUser.kelas;
+    loadPjBLPekanAktif();
+  } else {
+    document.getElementById('pjbl-kelas-input').addEventListener('change', (e) => {
+      pjblState.kelas = e.target.value.trim();
+      loadPjBLPekanAktif();
+    });
+  }
+}
+
+async function loadPjBLPekanAktif(){
+  if(!pjblState.kelas) return;
+  const body = document.getElementById('pjbl-body');
+  body.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(180,39,43,0.25)"></span>Memuat data...</div>`;
+
+  const info = await callApi('getPekanAktifPjBL', { kelas: pjblState.kelas });
+  if(!info.success){
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Tidak bisa menentukan pekan aktif untuk kelas ini. Pastikan nama kelas diawali angka jenjang (mis. "1 Banin A") dan sheet "Time Line" sudah terisi.</div>`;
+    return;
+  }
+
+  pjblState.jenjang = info.jenjang;
+  pjblState.daftarPekan = info.daftarPekan;
+  pjblState.pekan = info.pekanAktif;
+
+  const siswaRes = await callApi('getSiswaByKelas', { kelas: pjblState.kelas });
+  pjblState.siswa = siswaRes.data || [];
+
+  await loadPjBLForPekan(pjblState.pekan);
+}
+
+async function loadPjBLForPekan(pekan){
+  pjblState.pekan = pekan;
+  const pekanInfo = pjblState.daftarPekan.find(p => p.pekan.toString() === pekan.toString());
+  pjblState.kegiatanRencana = pekanInfo ? pekanInfo.kegiatan : '';
+
+  const existing = await callApi('getPjBLPekan', { kelas: pjblState.kelas, pekan });
+
+  pjblState.nilai = {};
+  pjblState.siswa.forEach(s => { pjblState.nilai[s.nis] = existing.nilai ? (existing.nilai[s.nis] || '') : ''; });
+
+  if(existing.log){
+    pjblState.realita = existing.log.realita || '';
+    pjblState.kendala = existing.log.kendala || '';
+    pjblState.masukan = existing.log.masukan || '';
+    pjblState.fotoUrlLama = existing.log.fotoUrl || '';
+  } else {
+    pjblState.realita = ''; pjblState.kendala = ''; pjblState.masukan = ''; pjblState.fotoUrlLama = '';
+  }
+  pjblState.fotoBase64 = null; pjblState.fotoMime = null;
+
+  renderPjBLForm(existing.sudahAda);
+}
+
+function renderPjBLForm(sudahAda){
+  const body = document.getElementById('pjbl-body');
+
+  if(pjblState.siswa.length === 0){
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Belum ada data siswa untuk kelas ini di sheet Siswa.</div>`;
+    return;
+  }
+
+  const opsiPekan = pjblState.daftarPekan.map(p =>
+    `<option value="${p.pekan}" ${p.pekan.toString()===pjblState.pekan.toString()?'selected':''}>Pekan ${p.pekan} — ${p.tanggal}</option>`
+  ).join('');
+
+  body.innerHTML = `
+    <div class="card">
+      <div class="card-title">
+        Pekan Berjalan
+        <select class="pekan-select" id="pekan-select" onchange="loadPjBLForPekan(this.value)">${opsiPekan}</select>
+        ${sudahAda ? '<span class="pekan-badge">Sudah ada data — mode edit</span>' : ''}
+      </div>
+      <div style="font-size:13px;color:var(--muted)">${pjblState.kegiatanRencana ? pjblState.kegiatanRencana.replace(/\n/g,' — ') : 'Tidak ada rencana kegiatan tercatat untuk pekan ini.'}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Timeline Pekan Ini</div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;">Realita / Kejadian</label>
+        <textarea class="textarea-field" id="realita-input" placeholder="Apa yang benar-benar terjadi/dikerjakan pekan ini...">${pjblState.realita}</textarea>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;">Kendala</label>
+        <textarea class="textarea-field" id="kendala-input" placeholder="Hambatan yang ditemui...">${pjblState.kendala}</textarea>
+      </div>
+      <div>
+        <label style="display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;">Masukan</label>
+        <textarea class="textarea-field" id="masukan-input" placeholder="Catatan/saran untuk pekan berikutnya...">${pjblState.masukan}</textarea>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Foto Kegiatan</div>
+      <div class="foto-upload ${pjblState.fotoUrlLama ? 'has-file' : ''}" id="pjbl-foto-upload-box" onclick="document.getElementById('pjbl-foto-input').click()">
+        ${pjblState.fotoUrlLama ? 'Sudah ada foto tersimpan — klik untuk ganti' : 'Klik untuk unggah 1 foto kegiatan PjBL pekan ini'}
+      </div>
+      <input type="file" id="pjbl-foto-input" accept="image/*" style="display:none" onchange="handlePjBLFotoSelect(event)">
+      <img id="pjbl-foto-preview" style="max-width:100%;max-height:160px;border-radius:8px;margin-top:10px;display:none;">
+    </div>
+
+    <div class="card">
+      <div class="card-title">Nilai Keaktifan Pekan Ini (${pjblState.siswa.length} siswa)</div>
+      <div class="legend-skala">
+        <span><b>1</b> = Perlu Bimbingan Khusus</span>
+        <span><b>2</b> = Cukup / Perlu Diingatkan</span>
+        <span><b>3</b> = Aktif</span>
+        <span><b>4</b> = Sangat Aktif</span>
+      </div>
+      <div id="pjbl-nilai-list"></div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:10px;">Tips: ketik angka lalu tekan <b>Enter</b> atau panah <b>↓/↑</b> untuk pindah ke siswa berikutnya/sebelumnya tanpa pakai mouse.</div>
+    </div>
+
+    <button class="btn" id="submit-pjbl-btn" onclick="submitPjBLForm()">Simpan Pekan Ini</button>
+  `;
+
+  const list = document.getElementById('pjbl-nilai-list');
+  pjblState.siswa.forEach((s, idx) => {
+    const row = document.createElement('div');
+    row.className = 'nilai-row';
+    const nilaiAwal = pjblState.nilai[s.nis] || '';
+    row.innerHTML = `
+      <div><div class="siswa-name">${s.nama}</div><div class="siswa-nis">NIS ${s.nis}</div></div>
+      <input type="text" inputmode="numeric" maxlength="1" class="nilai-input ${nilaiAwal ? 'terisi' : ''}"
+        id="nilai-input-${idx}" data-nis="${s.nis}" value="${nilaiAwal}">
+    `;
+    list.appendChild(row);
+  });
+
+  // Navigasi keyboard: ketik 1-4 langsung tersimpan ke state, Enter/panah bawah pindah ke bawah,
+  // panah atas pindah ke atas. Input dibuat text (bukan number) supaya tidak muncul tombol stepper.
+  pjblState.siswa.forEach((s, idx) => {
+    const input = document.getElementById(`nilai-input-${idx}`);
+    input.addEventListener('input', () => {
+      let v = input.value.replace(/[^1-4]/g, '').slice(0,1);
+      input.value = v;
+      pjblState.nilai[s.nis] = v;
+      input.classList.toggle('terisi', !!v);
+    });
+    input.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === 'ArrowDown'){
+        e.preventDefault();
+        const next = document.getElementById(`nilai-input-${idx+1}`);
+        if(next){ next.focus(); next.select(); }
+      } else if(e.key === 'ArrowUp'){
+        e.preventDefault();
+        const prev = document.getElementById(`nilai-input-${idx-1}`);
+        if(prev){ prev.focus(); prev.select(); }
+      }
+    });
+  });
+}
+
+function handlePjBLFotoSelect(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  pjblState.fotoMime = file.type;
+  const reader = new FileReader();
+  reader.onload = () => {
+    pjblState.fotoBase64 = reader.result.split(',')[1];
+    document.getElementById('pjbl-foto-upload-box').textContent = 'Foto dipilih: ' + file.name;
+    document.getElementById('pjbl-foto-upload-box').classList.add('has-file');
+    const preview = document.getElementById('pjbl-foto-preview');
+    preview.src = reader.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitPjBLForm(){
+  const btn = document.getElementById('submit-pjbl-btn');
+
+  pjblState.realita = document.getElementById('realita-input').value.trim();
+  pjblState.kendala = document.getElementById('kendala-input').value.trim();
+  pjblState.masukan = document.getElementById('masukan-input').value.trim();
+
+  const nilaiKosong = pjblState.siswa.filter(s => !pjblState.nilai[s.nis]);
+  if(nilaiKosong.length > 0){
+    showToast(`Masih ada ${nilaiKosong.length} siswa yang belum diisi nilainya`, true);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Menyimpan...';
+
+  try{
+    let fotoUrl = '';
+    if(pjblState.fotoBase64){
+      const uploadRes = await callApi('uploadFotoPjBL', {
+        kelas: pjblState.kelas,
+        base64: pjblState.fotoBase64,
+        mimeType: pjblState.fotoMime,
+        filename: `PjBL_${pjblState.kelas}_P${pjblState.pekan}.jpg`
+      });
+      if(uploadRes.success) fotoUrl = uploadRes.url;
+    }
+
+    const nilaiArr = pjblState.siswa.map(s => ({ nis: s.nis, nama: s.nama, skor: Number(pjblState.nilai[s.nis]) }));
+
+    const res = await callApi('submitPjBL', {
+      kelas: pjblState.kelas,
+      pekan: pjblState.pekan,
+      kegiatanRencana: pjblState.kegiatanRencana,
+      realita: pjblState.realita,
+      kendala: pjblState.kendala,
+      masukan: pjblState.masukan,
+      fotoUrl,
+      dicatatOleh: currentUser.nama,
+      nilai: nilaiArr
+    });
+
+    if(res.success){
+      showToast('Data PjBL pekan ini berhasil disimpan');
+      loadPjBLForPekan(pjblState.pekan);
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Pekan Ini';
   }
 }
 </script>
