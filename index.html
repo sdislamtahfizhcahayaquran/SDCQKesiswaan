@@ -319,7 +319,7 @@
     font-weight:600;
     letter-spacing:.02em;
   }
-  .logout-btn{
+  .logout-btn, .account-btn{
     background:transparent;
     border:1px solid rgba(255,255,255,0.35);
     color:#fff;
@@ -329,7 +329,7 @@
     cursor:pointer;
     font-family:inherit;
   }
-  .logout-btn:hover{ background:rgba(255,255,255,0.12); }
+  .logout-btn:hover, .account-btn:hover{ background:rgba(255,255,255,0.12); }
 
   .layout{ display:flex; }
   .sidebar{
@@ -456,6 +456,64 @@
     margin-right:6px;
   }
   @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ===== MODAL: UBAH AKUN ===== */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(31,36,32,0.45);
+    z-index:300;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background:var(--surface);
+    border-radius:14px;
+    width:100%;
+    max-width:420px;
+    padding:26px 26px 24px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px;
+  }
+  .modal-title{ font-size:16.5px; font-weight:700; color:var(--primary-dark); }
+  .modal-close{
+    background:none; border:none; cursor:pointer;
+    font-size:20px; line-height:1; color:var(--muted);
+    padding:4px;
+  }
+  .modal-close:hover{ color:var(--text); }
+  .modal-tabs{ display:flex; gap:6px; margin-bottom:18px; background:var(--bg); padding:4px; border-radius:8px; }
+  .modal-tab{
+    flex:1; text-align:center; padding:8px 10px;
+    border:none; background:transparent; border-radius:6px;
+    font-family:inherit; font-size:12.5px; font-weight:600;
+    color:var(--muted); cursor:pointer;
+  }
+  .modal-tab.active{ background:#fff; color:var(--primary-dark); box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+  .modal-pane{ display:none; }
+  .modal-pane.active{ display:block; }
+  .modal-field{ margin-bottom:14px; }
+  .modal-field label{
+    display:block; font-size:12.5px; font-weight:600; color:var(--text); margin-bottom:6px;
+  }
+  .modal-field input{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px;
+    font-family:inherit; font-size:13.5px; background:var(--bg);
+  }
+  .modal-field input:focus{ outline:none; border-color:var(--primary); background:#fff; }
+  .modal-error{
+    background:#FBEDE8; color:var(--danger); border:1px solid #F0D2C6;
+    border-radius:8px; padding:9px 11px; font-size:12.5px; margin-bottom:14px; display:none;
+  }
+  .modal-success{
+    background:#EAF3ED; color:var(--success); border:1px solid #CDE5D6;
+    border-radius:8px; padding:9px 11px; font-size:12.5px; margin-bottom:14px; display:none;
+  }
 
   @media (max-width:720px){
     .layout{ flex-direction:column; }
@@ -621,6 +679,7 @@
     <div class="topbar-right">
       <span id="user-name"></span>
       <span class="role-badge" id="user-role"></span>
+      <button class="account-btn" onclick="openAccountModal()">Ubah Akun</button>
       <button class="logout-btn" onclick="logout()">Keluar</button>
     </div>
   </div>
@@ -628,6 +687,59 @@
   <div class="layout">
     <div class="sidebar" id="sidebar"></div>
     <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- ============ MODAL: UBAH AKUN ============ -->
+<div class="modal-overlay" id="account-modal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Ubah Akun</div>
+      <button class="modal-close" onclick="closeAccountModal()">&times;</button>
+    </div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-btn-pass" onclick="switchAccountTab('pass')">Ganti Password</button>
+      <button class="modal-tab" id="tab-btn-user" onclick="switchAccountTab('user')">Ganti Username</button>
+    </div>
+
+    <!-- Pane: ganti password -->
+    <div class="modal-pane active" id="pane-pass">
+      <div class="modal-error" id="pass-error"></div>
+      <div class="modal-success" id="pass-success"></div>
+      <form id="form-pass" onsubmit="return submitGantiPassword(event)">
+        <div class="modal-field">
+          <label>Password Lama</label>
+          <input type="password" id="pass-old" autocomplete="current-password" required>
+        </div>
+        <div class="modal-field">
+          <label>Password Baru</label>
+          <input type="password" id="pass-new" autocomplete="new-password" required minlength="4">
+        </div>
+        <div class="modal-field">
+          <label>Ulangi Password Baru</label>
+          <input type="password" id="pass-new-confirm" autocomplete="new-password" required minlength="4">
+        </div>
+        <button type="submit" class="btn" id="pass-submit-btn">Simpan Password Baru</button>
+      </form>
+    </div>
+
+    <!-- Pane: ganti username -->
+    <div class="modal-pane" id="pane-user">
+      <div class="modal-error" id="user-error"></div>
+      <div class="modal-success" id="user-success"></div>
+      <form id="form-user" onsubmit="return submitGantiUsername(event)">
+        <div class="modal-field">
+          <label>Password Saat Ini</label>
+          <input type="password" id="user-pass-verify" autocomplete="current-password" required>
+        </div>
+        <div class="modal-field">
+          <label>Username Baru</label>
+          <input type="text" id="user-new" autocomplete="off" required>
+        </div>
+        <button type="submit" class="btn" id="user-submit-btn">Simpan Username Baru</button>
+      </form>
+    </div>
   </div>
 </div>
 
@@ -658,7 +770,7 @@ async function callApi(action, params={}){
   const body = JSON.stringify({ action, secret: APP_SECRET, ...params });
   const res = await fetch(APPS_SCRIPT_URL, { method:'POST', body });
   const data = await res.json();
-  if(!data.success && action !== 'login'){
+  if(!data.success && action !== 'login' && action !== 'gantiPassword' && action !== 'gantiUsername'){
     showToast(data.error || 'Terjadi kesalahan', true);
   }
   return data;
@@ -673,7 +785,7 @@ function showToast(msg, isError=false){
 }
 
 /* ==========================================================
-   TAMPIL/SEMBUNYIKAN KATA SANDI
+   TAMPIL/SEMBUNYIKAN KATA SANDI (login)
    ========================================================== */
 document.getElementById('toggle-pass').addEventListener('click', () => {
   const input = document.getElementById('login-password');
@@ -734,6 +846,163 @@ window.addEventListener('load', () => {
     enterApp();
   }
 });
+
+/* ==========================================================
+   MODAL: UBAH AKUN (ganti password / ganti username sendiri)
+   ========================================================== */
+function openAccountModal(){
+  document.getElementById('account-modal').classList.add('open');
+  switchAccountTab('pass');
+  document.getElementById('form-pass').reset();
+  document.getElementById('form-user').reset();
+  hideModalMsgs();
+}
+function closeAccountModal(){
+  document.getElementById('account-modal').classList.remove('open');
+}
+// klik area gelap di luar kotak modal untuk menutup
+document.getElementById('account-modal').addEventListener('click', (e) => {
+  if(e.target.id === 'account-modal') closeAccountModal();
+});
+
+function switchAccountTab(tab){
+  document.getElementById('tab-btn-pass').classList.toggle('active', tab === 'pass');
+  document.getElementById('tab-btn-user').classList.toggle('active', tab === 'user');
+  document.getElementById('pane-pass').classList.toggle('active', tab === 'pass');
+  document.getElementById('pane-user').classList.toggle('active', tab === 'user');
+  hideModalMsgs();
+}
+function hideModalMsgs(){
+  ['pass-error','pass-success','user-error','user-success'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+}
+
+async function submitGantiPassword(e){
+  e.preventDefault();
+  const errEl = document.getElementById('pass-error');
+  const okEl = document.getElementById('pass-success');
+  const btn = document.getElementById('pass-submit-btn');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  const oldPass = document.getElementById('pass-old').value;
+  const newPass = document.getElementById('pass-new').value;
+  const newPassConfirm = document.getElementById('pass-new-confirm').value;
+
+  if(newPass !== newPassConfirm){
+    errEl.textContent = 'Password baru dan konfirmasi tidak sama.';
+    errEl.style.display = 'block';
+    return false;
+  }
+  if(newPass.length < 4){
+    errEl.textContent = 'Password baru minimal 4 karakter.';
+    errEl.style.display = 'block';
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#fff;border-color:rgba(255,255,255,0.4)"></span>Menyimpan...';
+
+  try{
+    const oldHash = await hashPassword(currentUser.username, oldPass);
+    const newHash = await hashPassword(currentUser.username, newPass);
+    const res = await callApi('gantiPassword', {
+      username: currentUser.username,
+      oldPasswordHash: oldHash,
+      newPasswordHash: newHash
+    });
+
+    if(res.success){
+      okEl.textContent = 'Password berhasil diubah.';
+      okEl.style.display = 'block';
+      document.getElementById('form-pass').reset();
+      showToast('Password berhasil diubah');
+    } else {
+      const pesan = {
+        password_lama_salah: 'Password lama salah.',
+        akun_nonaktif: 'Akun sedang tidak aktif. Hubungi admin.',
+        password_baru_kosong: 'Password baru tidak boleh kosong.',
+        user_not_found: 'Akun tidak ditemukan.'
+      };
+      errEl.textContent = pesan[res.error] || 'Gagal mengubah password.';
+      errEl.style.display = 'block';
+    }
+  } catch(err){
+    errEl.textContent = 'Gagal terhubung ke server.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Password Baru';
+  }
+  return false;
+}
+
+async function submitGantiUsername(e){
+  e.preventDefault();
+  const errEl = document.getElementById('user-error');
+  const okEl = document.getElementById('user-success');
+  const btn = document.getElementById('user-submit-btn');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+
+  const currentPass = document.getElementById('user-pass-verify').value;
+  const newUsername = document.getElementById('user-new').value.trim();
+
+  if(!newUsername){
+    errEl.textContent = 'Username baru tidak boleh kosong.';
+    errEl.style.display = 'block';
+    return false;
+  }
+  if(newUsername.toLowerCase() === currentUser.username.toLowerCase()){
+    errEl.textContent = 'Username baru sama dengan username sekarang.';
+    errEl.style.display = 'block';
+    return false;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner" style="border-top-color:#fff;border-color:rgba(255,255,255,0.4)"></span>Menyimpan...';
+
+  try{
+    // verifikasi identitas pakai password + username LAMA
+    const passwordHash = await hashPassword(currentUser.username, currentPass);
+    // hash baru dihitung ulang pakai password yang sama + username BARU
+    // (skema hash memakai username sebagai salt, jadi wajib dihitung ulang)
+    const newPasswordHash = await hashPassword(newUsername, currentPass);
+
+    const res = await callApi('gantiUsername', {
+      oldUsername: currentUser.username,
+      passwordHash,
+      newUsername,
+      newPasswordHash
+    });
+
+    if(res.success){
+      currentUser.username = res.newUsername;
+      sessionStorage.setItem('kesiswaan_user', JSON.stringify(currentUser));
+      okEl.textContent = 'Username berhasil diubah menjadi "' + res.newUsername + '".';
+      okEl.style.display = 'block';
+      document.getElementById('form-user').reset();
+      showToast('Username berhasil diubah');
+    } else {
+      const pesan = {
+        password_salah: 'Password yang Anda masukkan salah.',
+        akun_nonaktif: 'Akun sedang tidak aktif. Hubungi admin.',
+        username_baru_kosong: 'Username baru tidak boleh kosong.',
+        username_sudah_dipakai: 'Username itu sudah dipakai orang lain.',
+        newPasswordHash_wajib_dikirim: 'Terjadi kesalahan sistem, coba lagi.',
+        user_not_found: 'Akun tidak ditemukan.'
+      };
+      errEl.textContent = pesan[res.error] || 'Gagal mengubah username.';
+      errEl.style.display = 'block';
+    }
+  } catch(err){
+    errEl.textContent = 'Gagal terhubung ke server.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Simpan Username Baru';
+  }
+  return false;
+}
 
 /* ==========================================================
    NAVIGASI MODUL
