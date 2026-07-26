@@ -364,6 +364,7 @@
     border-radius:10px;
     margin-left:auto;
   }
+  .nav-badge.alert{ background:var(--danger); }
   .nav-icon{ width:16px; height:16px; flex-shrink:0; }
 
   .content{ flex:1; padding:26px 30px; max-width:900px; }
@@ -638,6 +639,29 @@
   .kd-riwayat-row:last-child{ border-bottom:none; }
   .kd-riwayat-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
   .kd-riwayat-del{ background:none; border:none; color:var(--danger); cursor:pointer; font-size:11.5px; padding:2px 6px; }
+
+  /* ===== NOTIFIKASI KETERLAMBATAN ===== */
+  .kd-notif-card{
+    background:#FBEDE8;
+    border:1px solid #EFC7B9;
+    border-radius:var(--radius);
+    padding:18px 20px;
+    margin-bottom:18px;
+  }
+  .kd-notif-title{
+    font-size:14px; font-weight:700; color:var(--danger);
+    display:flex; align-items:center; gap:8px; margin-bottom:12px;
+  }
+  .kd-notif-row{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 0; border-bottom:1px solid rgba(179,69,44,0.15);
+    font-size:13.5px;
+  }
+  .kd-notif-row:last-child{ border-bottom:none; }
+  .kd-notif-row input[type="checkbox"]{ width:16px; height:16px; accent-color:var(--danger); flex-shrink:0; }
+  .kd-notif-row .menit{ margin-left:auto; font-size:11.5px; color:var(--danger); font-weight:600; white-space:nowrap; }
+  .kd-notif-row.done{ opacity:.5; }
+  .kd-notif-row.done .menit{ color:var(--success); }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -1131,7 +1155,6 @@ const MODULES = [
   { id:'pjbl',         label:'PJBL',                   roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderPjBL },
   { id:'kedisiplinan', label:'Kedisiplinan',           roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderKedisiplinan },
 
-  { id:'keterlambatan',label:'Keterlambatan',          roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'masalah',      label:'Masalah Siswa',          roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'prestasi',     label:'Prestasi / Lomba',       roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'akademik',     label:'Akademik',                roles:['walas','kesiswaan','pimpinan'], built:false },
@@ -1139,6 +1162,7 @@ const MODULES = [
 ];
 
 let activeModule = 'absensi';
+let pendingKeterlambatanCount = 0;
 
 function enterApp(){
   document.getElementById('login-screen').style.display = 'none';
@@ -1147,6 +1171,24 @@ function enterApp(){
   document.getElementById('user-role').textContent = currentUser.role.toUpperCase();
   renderSidebar();
   setActiveModule('absensi');
+  if(currentUser.role === 'walas'){
+    refreshPendingKeterlambatanBadge();
+  }
+}
+
+// Cek berapa siswa yang telat >=15 menit hari ini dan belum dikonfirmasi jadi
+// poin, lalu tampilkan sebagai badge merah di menu Kedisiplinan (menggantikan
+// menu "Keterlambatan" yang sebelumnya berdiri sendiri).
+async function refreshPendingKeterlambatanBadge(){
+  if(!currentUser || currentUser.role !== 'walas') return;
+  try{
+    const res = await callApi('getKeterlambatanBelumDicatat', { kelas: currentUser.kelas, tanggal: todayStrKD() });
+    const list = res.data || [];
+    pendingKeterlambatanCount = list.filter(r => !r.sudahDicatat).length;
+  } catch(err){
+    pendingKeterlambatanCount = 0;
+  }
+  renderSidebar();
 }
 
 function renderSidebar(){
@@ -1155,7 +1197,13 @@ function renderSidebar(){
   MODULES.filter(m => m.roles.includes(currentUser.role)).forEach(m => {
     const div = document.createElement('div');
     div.className = 'nav-item' + (m.id === activeModule ? ' active' : '') + (!m.built ? ' disabled' : '');
-    div.innerHTML = `<span>${m.label}</span>` + (!m.built ? '<span class="nav-badge">segera</span>' : '');
+    let badge = '';
+    if(!m.built){
+      badge = '<span class="nav-badge">segera</span>';
+    } else if(m.id === 'kedisiplinan' && pendingKeterlambatanCount > 0){
+      badge = `<span class="nav-badge alert">${pendingKeterlambatanCount} telat</span>`;
+    }
+    div.innerHTML = `<span>${m.label}</span>` + badge;
     if(m.built){
       div.onclick = () => setActiveModule(m.id);
     }
@@ -1624,12 +1672,19 @@ async function submitPjBLForm(){
    lihat kondisi kelasnya tanpa harus masuk ke form input dulu. Tab
    "Rekap Bulanan" untuk laporan periodik walas: sortable di web,
    dan bisa di-download sebagai Excel (pakai library SheetJS/xlsx).
+
+   Notifikasi Keterlambatan: menu sidebar "Keterlambatan" yang berdiri
+   sendiri sudah dihapus. Sebagai gantinya, kartu notifikasi otomatis
+   muncul di bagian atas modul Kedisiplinan (untuk walas) kalau ada
+   siswa yang telat >=15 menit hari ini dan belum dikonfirmasi jadi
+   poin — plus badge merah di sidebar.
    ========================================================== */
 let kdState = {
   kelas:null, jenjang:null, tab:'riwayat', inputMode:'pelanggaran',
   tanggal:'', siswa:[], masterList:[],
   pelanggaranTerpilih:null, siswaTerpilihIds:{},
-  siswaTerpilih:null, pelanggaranTerpilihMap:{}
+  siswaTerpilih:null, pelanggaranTerpilihMap:{},
+  keterlambatanPending:[], keterlambatanTerpilih:{}
 };
 
 function todayStrKD(){
@@ -1689,7 +1744,20 @@ async function loadKedisiplinanKelas(){
   const masterRes = await callApi('getMasterPelanggaran', { jenjang: kdState.jenjang });
   kdState.masterList = masterRes.data || [];
 
+  await loadKdKeterlambatanPending();
+
   renderKedisiplinanShell();
+}
+
+// Ambil daftar siswa yang telat >=15 menit hari ini untuk kelas ini,
+// lalu simpan yang BELUM dikonfirmasi jadi poin ke kdState.keterlambatanPending.
+async function loadKdKeterlambatanPending(){
+  const tgl = todayStrKD();
+  const res = await callApi('getKeterlambatanBelumDicatat', { kelas: kdState.kelas, tanggal: tgl });
+  const list = res.data || [];
+  kdState.keterlambatanPending = list.filter(r => !r.sudahDicatat);
+  kdState.keterlambatanTerpilih = {};
+  kdState.keterlambatanPending.forEach(r => { kdState.keterlambatanTerpilih[r.nis] = true; }); // default semua tercentang
 }
 
 function renderKedisiplinanShell(){
@@ -1705,6 +1773,7 @@ function renderKedisiplinanShell(){
   }
 
   body.innerHTML = `
+    <div id="kd-notif-area"></div>
     <div class="kd-tabs">
       <button class="kd-tab ${kdState.tab==='riwayat'?'active':''}" onclick="switchKdTab('riwayat')">Riwayat &amp; Rekap Poin</button>
       <button class="kd-tab ${kdState.tab==='input'?'active':''}" onclick="switchKdTab('input')">+ Input Pelanggaran</button>
@@ -1712,7 +1781,70 @@ function renderKedisiplinanShell(){
     </div>
     <div id="kd-tab-content"></div>
   `;
+  renderKdNotifKeterlambatan();
   renderKdTabContent();
+}
+
+/* ---------- NOTIFIKASI: KETERLAMBATAN HARI INI ---------- */
+function renderKdNotifKeterlambatan(){
+  const area = document.getElementById('kd-notif-area');
+  if(!area) return;
+
+  if(!kdState.keterlambatanPending || kdState.keterlambatanPending.length === 0){
+    area.innerHTML = '';
+    return;
+  }
+
+  const jumlah = kdState.keterlambatanPending.length;
+  area.innerHTML = `
+    <div class="kd-notif-card">
+      <div class="kd-notif-title">⏰ Keterlambatan Hari Ini — ${jumlah} siswa telat ≥15 menit, belum jadi poin</div>
+      <div id="kd-notif-list"></div>
+      <button class="btn" id="kd-notif-konfirmasi-btn" style="margin-top:12px;background:var(--danger);"
+        onclick="submitKonfirmasiKeterlambatan()">Konfirmasi Terpilih Jadi Poin</button>
+    </div>
+  `;
+
+  const list = document.getElementById('kd-notif-list');
+  kdState.keterlambatanPending.forEach(r => {
+    const row = document.createElement('label');
+    row.className = 'kd-notif-row';
+    row.innerHTML = `
+      <input type="checkbox" ${kdState.keterlambatanTerpilih[r.nis] ? 'checked' : ''} onchange="kdState.keterlambatanTerpilih['${r.nis}'] = this.checked">
+      <div><div class="siswa-name">${r.nama}</div><div class="siswa-nis">NIS ${r.nis}</div></div>
+      <span class="menit">telat ${r.menitTerlambat} menit</span>
+    `;
+    list.appendChild(row);
+  });
+}
+
+async function submitKonfirmasiKeterlambatan(){
+  const btn = document.getElementById('kd-notif-konfirmasi-btn');
+  const listSiswa = kdState.keterlambatanPending.filter(r => kdState.keterlambatanTerpilih[r.nis]);
+  if(listSiswa.length === 0){
+    showToast('Pilih minimal 1 siswa', true);
+    return;
+  }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Menyimpan...';
+  try{
+    const res = await callApi('konfirmasiKeterlambatanJadiPoin', {
+      kelas: kdState.kelas,
+      tanggal: todayStrKD(),
+      dicatatOleh: currentUser.nama,
+      listSiswa: listSiswa.map(r => ({ nis: r.nis, nama: r.nama }))
+    });
+    if(res.success){
+      showToast(`Keterlambatan ${listSiswa.length} siswa berhasil dijadikan poin`);
+      await loadKdKeterlambatanPending();
+      renderKdNotifKeterlambatan();
+      if(kdState.tab === 'riwayat') renderKdRiwayat();
+      if(currentUser.role === 'walas') refreshPendingKeterlambatanBadge();
+    }
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Konfirmasi Terpilih Jadi Poin';
+  }
 }
 
 function switchKdTab(tab){
