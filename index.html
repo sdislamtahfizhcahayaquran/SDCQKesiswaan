@@ -605,7 +605,7 @@
   }
 
   /* ===== MODUL KEDISIPLINAN ===== */
-  .kd-tabs{ display:flex; gap:6px; margin-bottom:18px; background:var(--surface); padding:4px; border-radius:8px; border:1px solid var(--border); width:fit-content; }
+  .kd-tabs{ display:flex; gap:6px; margin-bottom:18px; background:var(--surface); padding:4px; border-radius:8px; border:1px solid var(--border); width:fit-content; flex-wrap:wrap; }
   .kd-tab{ padding:9px 16px; border:none; background:transparent; border-radius:6px; font-family:inherit; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; }
   .kd-tab.active{ background:var(--primary); color:#fff; }
   .kd-mode-toggle{ display:flex; gap:8px; margin-bottom:16px; }
@@ -639,6 +639,7 @@
   .kd-riwayat-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
   .kd-riwayat-del{ background:none; border:none; color:var(--danger); cursor:pointer; font-size:11.5px; padding:2px 6px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1620,7 +1621,9 @@ async function submitPjBLForm(){
    "1 siswa -> banyak pelanggaran" (cari siswa dulu, lalu tambahkan
    beberapa jenis pelanggaran untuknya). Tab "Riwayat & Rekap Poin"
    jadi tampilan default saat modul dibuka, supaya wali kelas langsung
-   lihat kondisi kelasnya tanpa harus masuk ke form input dulu.
+   lihat kondisi kelasnya tanpa harus masuk ke form input dulu. Tab
+   "Rekap Bulanan" untuk laporan periodik walas: sortable di web,
+   dan bisa di-download sebagai Excel (pakai library SheetJS/xlsx).
    ========================================================== */
 let kdState = {
   kelas:null, jenjang:null, tab:'riwayat', inputMode:'pelanggaran',
@@ -1705,6 +1708,7 @@ function renderKedisiplinanShell(){
     <div class="kd-tabs">
       <button class="kd-tab ${kdState.tab==='riwayat'?'active':''}" onclick="switchKdTab('riwayat')">Riwayat &amp; Rekap Poin</button>
       <button class="kd-tab ${kdState.tab==='input'?'active':''}" onclick="switchKdTab('input')">+ Input Pelanggaran</button>
+      <button class="kd-tab ${kdState.tab==='bulanan'?'active':''}" onclick="switchKdTab('bulanan')">Rekap Bulanan</button>
     </div>
     <div id="kd-tab-content"></div>
   `;
@@ -1718,6 +1722,7 @@ function switchKdTab(tab){
 
 function renderKdTabContent(){
   if(kdState.tab === 'riwayat') renderKdRiwayat();
+  else if(kdState.tab === 'bulanan') renderKdBulanan();
   else renderKdInput();
 }
 
@@ -2060,6 +2065,136 @@ async function submitKdModeSiswa(){
     btn.disabled = false;
     btn.textContent = 'Simpan Pelanggaran';
   }
+}
+
+/* ---------- TAB: REKAP BULANAN ----------
+   Untuk laporan periodik walas: tabel per siswa (jumlah Ringan/Sedang/
+   Berat + total poin), plus ringkasan total & rata-rata kelas. Sortable
+   di tampilan web (nama, poin, tanggal terakhir kejadian). Tombol
+   Download Excel selalu urut alfabetis (laporan resmi tidak perlu ikut
+   urutan sort layar). */
+const NAMA_BULAN = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+let kdBulananState = { bulan: new Date().getMonth()+1, tahun: new Date().getFullYear(), sort:'nama', data:[], ringkasan:null };
+
+async function renderKdBulanan(){
+  const c = document.getElementById('kd-tab-content');
+  c.innerHTML = `
+    <div class="card">
+      <div class="card-title">Pilih Periode</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <select id="kd-bulan-select" class="pekan-select"></select>
+        <select id="kd-tahun-select" class="pekan-select"></select>
+        <select id="kd-sort-select" class="pekan-select">
+          <option value="nama">Nama (A-Z)</option>
+          <option value="poin-desc">Poin Terbanyak</option>
+          <option value="poin-asc">Poin Terendah</option>
+          <option value="terbaru">Pelanggaran Terbaru</option>
+          <option value="terlama">Pelanggaran Terlama</option>
+        </select>
+        <button class="btn btn-sm" id="kd-muat-btn" style="width:auto;">Muat Data</button>
+      </div>
+    </div>
+    <div id="kd-bulanan-body"></div>
+  `;
+
+  const bulanSelect = document.getElementById('kd-bulan-select');
+  NAMA_BULAN.forEach((nm, i) => { if(i>0) bulanSelect.innerHTML += `<option value="${i}" ${i===kdBulananState.bulan?'selected':''}>${nm}</option>`; });
+
+  const tahunSelect = document.getElementById('kd-tahun-select');
+  const tahunSekarang = new Date().getFullYear();
+  for(let t = tahunSekarang - 1; t <= tahunSekarang + 1; t++){
+    tahunSelect.innerHTML += `<option value="${t}" ${t===kdBulananState.tahun?'selected':''}>${t}</option>`;
+  }
+  document.getElementById('kd-sort-select').value = kdBulananState.sort;
+
+  document.getElementById('kd-muat-btn').onclick = loadKdBulanan;
+  loadKdBulanan();
+}
+
+async function loadKdBulanan(){
+  kdBulananState.bulan = Number(document.getElementById('kd-bulan-select').value);
+  kdBulananState.tahun = Number(document.getElementById('kd-tahun-select').value);
+  kdBulananState.sort = document.getElementById('kd-sort-select').value;
+
+  const body = document.getElementById('kd-bulanan-body');
+  body.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(180,39,43,0.25)"></span>Memuat data...</div>`;
+
+  const res = await callApi('getRekapBulananKelas', { kelas: kdState.kelas, bulan: kdBulananState.bulan, tahun: kdBulananState.tahun });
+  if(!res.success){ body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Gagal memuat data.</div>`; return; }
+
+  kdBulananState.data = res.data;
+  kdBulananState.ringkasan = res.ringkasan;
+  renderKdBulananTable();
+}
+
+function sortKdBulananData(data, sortMode){
+  const arr = [...data];
+  if(sortMode === 'nama') arr.sort((a,b) => a.nama.localeCompare(b.nama));
+  else if(sortMode === 'poin-desc') arr.sort((a,b) => b.totalPoin - a.totalPoin);
+  else if(sortMode === 'poin-asc') arr.sort((a,b) => a.totalPoin - b.totalPoin);
+  else if(sortMode === 'terbaru') arr.sort((a,b) => (b.tanggalTerakhir||'').localeCompare(a.tanggalTerakhir||''));
+  else if(sortMode === 'terlama') arr.sort((a,b) => (a.tanggalTerakhir||'').localeCompare(b.tanggalTerakhir||''));
+  return arr;
+}
+
+function renderKdBulananTable(){
+  const body = document.getElementById('kd-bulanan-body');
+  const sorted = sortKdBulananData(kdBulananState.data, kdBulananState.sort);
+  const r = kdBulananState.ringkasan;
+
+  body.innerHTML = `
+    <div class="card">
+      <div class="card-title">${kdState.kelas} — ${NAMA_BULAN[kdBulananState.bulan]} ${kdBulananState.tahun}</div>
+      <div id="kd-bulanan-list"></div>
+      <div style="margin-top:16px;padding-top:14px;border-top:2px solid var(--border);font-size:13.5px;">
+        <div style="display:flex;justify-content:space-between;padding:5px 0;"><span>Total Poin Kelas</span><strong>${r.totalPoinKelas}</strong></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;"><span>Rata-rata Poin per Siswa</span><strong>${r.rataPoinSiswa}</strong></div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;"><span>Rata-rata Jumlah Pelanggaran per Siswa</span><strong>${r.rataKejadianSiswa}</strong></div>
+      </div>
+      <button class="btn" style="margin-top:16px;" onclick="downloadKdBulananExcel()">Download Excel</button>
+    </div>
+  `;
+
+  const list = document.getElementById('kd-bulanan-list');
+  if(sorted.length === 0){
+    list.innerHTML = `<div class="empty-state"><div class="icon">—</div>Belum ada data siswa.</div>`;
+    return;
+  }
+  sorted.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'kd-rekap-row';
+    row.innerHTML = `
+      <div><div class="siswa-name">${s.nama}</div><div class="siswa-nis">Ringan ${s.ringan} • Sedang ${s.sedang} • Berat ${s.berat}</div></div>
+      <div class="kd-rekap-total ${s.totalPoin>=100?'tinggi':(s.totalPoin>=50?'sedang':'aman')}">${s.totalPoin} poin</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function downloadKdBulananExcel(){
+  const r = kdBulananState.ringkasan;
+  const dataAlfabetis = sortKdBulananData(kdBulananState.data, 'nama');
+
+  const rows = [
+    ["SD Islam Tahfizh Cahaya Qur'an"],
+    ['Laporan Kedisiplinan Bulanan'],
+    [`Kelas: ${kdState.kelas}`],
+    [`Periode: ${NAMA_BULAN[kdBulananState.bulan]} ${kdBulananState.tahun}`],
+    [],
+    ['Nama Siswa', 'Ringan', 'Sedang', 'Berat', 'Total Poin']
+  ];
+  dataAlfabetis.forEach(s => rows.push([s.nama, s.ringan, s.sedang, s.berat, s.totalPoin]));
+  rows.push([]);
+  rows.push(['Total Poin Kelas', '', '', '', r.totalPoinKelas]);
+  rows.push(['Rata-rata Poin per Siswa', '', '', '', r.rataPoinSiswa]);
+  rows.push(['Rata-rata Jumlah Pelanggaran per Siswa', '', '', '', r.rataKejadianSiswa]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:28},{wch:8},{wch:8},{wch:8},{wch:12}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Rekap');
+  XLSX.writeFile(wb, `Rekap_Kedisiplinan_${kdState.kelas.replace(/\s+/g,'_')}_${kdBulananState.bulan}-${kdBulananState.tahun}.xlsx`);
 }
 </script>
 </body>
