@@ -1176,13 +1176,16 @@ function enterApp(){
   }
 }
 
-// Cek berapa siswa yang telat >=15 menit hari ini dan belum dikonfirmasi jadi
-// poin, lalu tampilkan sebagai badge merah di menu Kedisiplinan (menggantikan
-// menu "Keterlambatan" yang sebelumnya berdiri sendiri).
+// Cek berapa siswa yang telat >=15 menit dan BELUM dikonfirmasi jadi poin
+// (dari SEMUA tanggal yang belum dikonfirmasi, bukan cuma hari ini), lalu
+// tampilkan sebagai badge merah di menu Kedisiplinan (menggantikan menu
+// "Keterlambatan" yang sebelumnya berdiri sendiri).
 async function refreshPendingKeterlambatanBadge(){
   if(!currentUser || currentUser.role !== 'walas') return;
   try{
-    const res = await callApi('getKeterlambatanBelumDicatat', { kelas: currentUser.kelas, tanggal: todayStrKD() });
+    // tanggal sengaja tidak dikirim -> backend akan cek SEMUA tanggal yang
+    // belum dikonfirmasi (termasuk yang kelewat dari hari-hari sebelumnya).
+    const res = await callApi('getKeterlambatanBelumDicatat', { kelas: currentUser.kelas });
     const list = res.data || [];
     pendingKeterlambatanCount = list.filter(r => !r.sudahDicatat).length;
   } catch(err){
@@ -1675,9 +1678,11 @@ async function submitPjBLForm(){
 
    Notifikasi Keterlambatan: menu sidebar "Keterlambatan" yang berdiri
    sendiri sudah dihapus. Sebagai gantinya, kartu notifikasi otomatis
-   muncul di bagian atas modul Kedisiplinan (untuk walas) kalau ada
-   siswa yang telat >=15 menit hari ini dan belum dikonfirmasi jadi
-   poin — plus badge merah di sidebar.
+   muncul di bagian atas modul Kedisiplinan (untuk walas) berisi SEMUA
+   siswa yang telat >=15 menit dan belum dikonfirmasi jadi poin, dari
+   TANGGAL BERAPAPUN (bukan cuma hari ini) — jadi kalau ada yang kelewat
+   dari hari-hari sebelumnya, tetap kelihatan dan tidak "terkubur".
+   Plus badge merah di sidebar dengan jumlah totalnya.
    ========================================================== */
 let kdState = {
   kelas:null, jenjang:null, tab:'riwayat', inputMode:'pelanggaran',
@@ -1749,15 +1754,20 @@ async function loadKedisiplinanKelas(){
   renderKedisiplinanShell();
 }
 
-// Ambil daftar siswa yang telat >=15 menit hari ini untuk kelas ini,
-// lalu simpan yang BELUM dikonfirmasi jadi poin ke kdState.keterlambatanPending.
+// Ambil SEMUA siswa yang telat >=15 menit untuk kelas ini (lintas tanggal,
+// tidak dibatasi hari ini saja), lalu simpan yang BELUM dikonfirmasi jadi
+// poin ke kdState.keterlambatanPending. Sengaja tidak dikirim parameter
+// tanggal ke backend -> backend akan cek SEMUA tanggal yang belum
+// dikonfirmasi, termasuk yang kelewat dari hari-hari sebelumnya.
+// Karena bisa lintas tanggal, kunci pemilihan checkbox dibuat dari
+// "tanggal|nis" (bukan cuma nis) supaya tidak tertukar antar tanggal.
 async function loadKdKeterlambatanPending(){
-  const tgl = todayStrKD();
-  const res = await callApi('getKeterlambatanBelumDicatat', { kelas: kdState.kelas, tanggal: tgl });
+  const res = await callApi('getKeterlambatanBelumDicatat', { kelas: kdState.kelas });
   const list = res.data || [];
-  kdState.keterlambatanPending = list.filter(r => !r.sudahDicatat);
+  kdState.keterlambatanPending = list.filter(r => !r.sudahDicatat)
+    .sort((a,b) => (a.tanggal||'').localeCompare(b.tanggal||''));
   kdState.keterlambatanTerpilih = {};
-  kdState.keterlambatanPending.forEach(r => { kdState.keterlambatanTerpilih[r.nis] = true; }); // default semua tercentang
+  kdState.keterlambatanPending.forEach(r => { kdState.keterlambatanTerpilih[r.tanggal + '|' + r.nis] = true; }); // default semua tercentang
 }
 
 function renderKedisiplinanShell(){
@@ -1785,7 +1795,7 @@ function renderKedisiplinanShell(){
   renderKdTabContent();
 }
 
-/* ---------- NOTIFIKASI: KETERLAMBATAN HARI INI ---------- */
+/* ---------- NOTIFIKASI: KETERLAMBATAN BELUM DIKONFIRMASI (SEMUA TANGGAL) ---------- */
 function renderKdNotifKeterlambatan(){
   const area = document.getElementById('kd-notif-area');
   if(!area) return;
@@ -1798,7 +1808,7 @@ function renderKdNotifKeterlambatan(){
   const jumlah = kdState.keterlambatanPending.length;
   area.innerHTML = `
     <div class="kd-notif-card">
-      <div class="kd-notif-title">⏰ Keterlambatan Hari Ini — ${jumlah} siswa telat ≥15 menit, belum jadi poin</div>
+      <div class="kd-notif-title">⏰ Keterlambatan Belum Dikonfirmasi — ${jumlah} siswa (termasuk yang kelewat)</div>
       <div id="kd-notif-list"></div>
       <button class="btn" id="kd-notif-konfirmasi-btn" style="margin-top:12px;background:var(--danger);"
         onclick="submitKonfirmasiKeterlambatan()">Konfirmasi Terpilih Jadi Poin</button>
@@ -1807,20 +1817,29 @@ function renderKdNotifKeterlambatan(){
 
   const list = document.getElementById('kd-notif-list');
   kdState.keterlambatanPending.forEach(r => {
+    const key = r.tanggal + '|' + r.nis;
     const row = document.createElement('label');
     row.className = 'kd-notif-row';
     row.innerHTML = `
-      <input type="checkbox" ${kdState.keterlambatanTerpilih[r.nis] ? 'checked' : ''} onchange="kdState.keterlambatanTerpilih['${r.nis}'] = this.checked">
-      <div><div class="siswa-name">${r.nama}</div><div class="siswa-nis">NIS ${r.nis}</div></div>
+      <input type="checkbox" ${kdState.keterlambatanTerpilih[key] ? 'checked' : ''} onchange="kdState.keterlambatanTerpilih['${key}'] = this.checked">
+      <div><div class="siswa-name">${r.nama}</div><div class="siswa-nis">NIS ${r.nis} • ${formatTanggalIndo(r.tanggal)}</div></div>
       <span class="menit">telat ${r.menitTerlambat} menit</span>
     `;
     list.appendChild(row);
   });
 }
 
+// Format "yyyy-MM-dd" jadi "12 Feb 2026" biar gampang dibaca di kartu notifikasi.
+function formatTanggalIndo(tglStr){
+  if(!tglStr) return '-';
+  const [y, m, d] = tglStr.split('-').map(Number);
+  const nama = ['','Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${d} ${nama[m] || ''} ${y}`;
+}
+
 async function submitKonfirmasiKeterlambatan(){
   const btn = document.getElementById('kd-notif-konfirmasi-btn');
-  const listSiswa = kdState.keterlambatanPending.filter(r => kdState.keterlambatanTerpilih[r.nis]);
+  const listSiswa = kdState.keterlambatanPending.filter(r => kdState.keterlambatanTerpilih[r.tanggal + '|' + r.nis]);
   if(listSiswa.length === 0){
     showToast('Pilih minimal 1 siswa', true);
     return;
@@ -1828,11 +1847,13 @@ async function submitKonfirmasiKeterlambatan(){
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Menyimpan...';
   try{
+    // Setiap siswa bawa tanggal kejadiannya sendiri-sendiri (bisa beda-beda
+    // kalau ada yang kelewat dari hari sebelumnya), backend akan mengelompokkan
+    // per tanggal sebelum menulis ke sheet Kedisiplinan.
     const res = await callApi('konfirmasiKeterlambatanJadiPoin', {
       kelas: kdState.kelas,
-      tanggal: todayStrKD(),
       dicatatOleh: currentUser.nama,
-      listSiswa: listSiswa.map(r => ({ nis: r.nis, nama: r.nama }))
+      listSiswa: listSiswa.map(r => ({ nis: r.nis, nama: r.nama, tanggal: r.tanggal }))
     });
     if(res.success){
       showToast(`Keterlambatan ${listSiswa.length} siswa berhasil dijadikan poin`);
