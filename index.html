@@ -760,33 +760,152 @@
   /* ===== MOOD (emoji) ===== */
   .mood-option .mood-emoji{ font-size:28px; line-height:1; }
 
-  /* ===== PATH TRACK (progress jalan) ===== */
-  .dash-path-wrap{ margin-bottom:10px; }
-  .dash-path-track{ position:relative; height:46px; margin:6px 4px 4px; }
+  /* ===== DASHBOARD HARIAN: BAR PERJALANAN ===== */
+  .dash-day-note{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; margin-bottom:16px;
+  }
+  .dash-day-note strong{ display:block; color:var(--primary-dark); font-size:13.5px; margin-bottom:3px; }
+  .dash-day-note span{ color:var(--muted); font-size:12px; line-height:1.5; }
+  .dash-day-count{
+    flex-shrink:0; min-width:92px; text-align:center; border-radius:8px;
+    background:var(--bg); border:1px solid var(--border); padding:8px 10px;
+    color:var(--primary-dark); font-size:12px; font-weight:700;
+  }
+  .dash-list-card{ overflow:visible; }
+  .dash-row{
+    position:relative; padding:14px 0 24px;
+    border-bottom:1px solid var(--border); overflow:visible;
+  }
+  .dash-row:last-child{ border-bottom:none; }
+  .dash-row.is-complete .dash-path-line-fill{ background:var(--success); }
+  .dash-row.is-offline .dash-path-line{ background:#EEECE6; }
+  .dash-row.is-offline .dash-path-line-fill{ background:#D8D5CC; }
+  .dash-row-top{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    margin-bottom:4px;
+  }
+  .dash-lane-left{ display:flex; align-items:center; gap:8px; min-width:0; }
+  .dash-order{
+    width:26px; height:26px; border-radius:50%; display:inline-flex;
+    align-items:center; justify-content:center; flex-shrink:0;
+    background:var(--bg); border:1px solid var(--border);
+    color:var(--muted); font-size:10.5px; font-weight:700;
+  }
+  .dash-lane-progress{
+    color:var(--primary-dark); font-size:12px; font-weight:700; white-space:nowrap;
+  }
+  .dash-path-wrap{ margin-bottom:4px; }
+  .dash-path-track{
+    position:relative; height:96px; margin:6px 2px 0;
+    overflow:visible;
+  }
   .dash-path-line{
-    position:absolute; left:6px; right:6px; top:50%;
-    height:3px; transform:translateY(-50%);
-    background-image:linear-gradient(90deg, var(--border) 0, var(--border) 60%, transparent 60%, transparent 100%);
-    background-size:14px 3px; background-repeat:repeat-x;
-    border-radius:2px;
+    position:absolute; left:0; right:0; top:8px;
+    height:56px; border-radius:14px;
+    background:#E7DDCB;
+    box-shadow:inset 0 0 0 1px rgba(140,108,65,.08);
   }
   .dash-path-line-fill{
-    position:absolute; left:6px; top:50%;
-    height:3px; transform:translateY(-50%);
-    background:var(--success); border-radius:2px;
-    transition:width .4s;
-  }
-  .dash-path-line-fill.sedang{ background:var(--warn); }
-  .dash-path-line-fill.rendah{ background:var(--danger); }
-  .dash-path-avatar{
-    position:absolute; top:50%; width:34px; height:34px; object-fit:contain;
-    transform:translate(-50%,-68%);
-    transition:left .4s;
-    filter:drop-shadow(0 2px 3px rgba(0,0,0,.18));
+    position:absolute; left:0; top:8px;
+    height:56px; border-radius:14px;
+    background:#CCBA98;
+    transition:width .45s ease;
   }
   .dash-path-finish{
-    position:absolute; right:0; top:50%; transform:translateY(-50%);
-    width:16px; height:16px; stroke:var(--muted); opacity:.6;
+    position:absolute; right:12px; top:25px;
+    width:20px; height:20px; stroke:var(--primary-dark); opacity:.45;
+    z-index:2;
+  }
+  .dash-path-avatar-button{
+    position:absolute; top:36px;
+    width:58px; height:66px;
+    padding:0; border:none; background:transparent;
+    transform:translate(-50%,-50%);
+    cursor:pointer; z-index:5;
+    transition:left .45s ease, transform .15s ease;
+  }
+  .dash-path-avatar-button:hover,
+  .dash-path-avatar-button:focus-visible{
+    transform:translate(-50%,-54%);
+    outline:none;
+  }
+  .dash-path-avatar{
+    width:52px; height:62px; object-fit:contain; display:block; margin:auto;
+    filter:drop-shadow(0 3px 3px rgba(0,0,0,.18));
+    pointer-events:none;
+  }
+  .dash-avatar-fallback{
+    width:42px; height:42px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; margin:10px auto 0;
+    background:var(--primary); color:#fff; border:3px solid #fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.18);
+    font-size:15px; font-weight:700;
+  }
+  .dash-avatar-popover{
+    display:none; position:absolute; left:50%; bottom:calc(100% + 8px);
+    transform:translateX(-50%); width:228px;
+    background:#fff; border:1px solid var(--border); border-radius:10px;
+    padding:12px; text-align:left; color:var(--text);
+    box-shadow:0 12px 28px rgba(31,36,32,.16);
+    cursor:default; z-index:20;
+  }
+  .dash-avatar-popover::after{
+    content:""; position:absolute; left:50%; bottom:-6px;
+    width:10px; height:10px; background:#fff;
+    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+    transform:translateX(-50%) rotate(45deg);
+  }
+  .dash-path-avatar-button.open .dash-avatar-popover{ display:block; }
+  .dash-path-avatar-button.edge-start .dash-avatar-popover{
+    left:-2px; transform:none;
+  }
+  .dash-path-avatar-button.edge-start .dash-avatar-popover::after{
+    left:28px; transform:rotate(45deg);
+  }
+  .dash-path-avatar-button.edge-end .dash-avatar-popover{
+    left:auto; right:-2px; transform:none;
+  }
+  .dash-path-avatar-button.edge-end .dash-avatar-popover::after{
+    left:auto; right:22px; transform:rotate(45deg);
+  }
+  .dash-pop-name{ display:block; font-size:13.5px; font-weight:700; color:var(--primary-dark); line-height:1.35; }
+  .dash-pop-class{ display:block; margin-top:2px; font-size:11.5px; color:var(--muted); }
+  .dash-pop-status{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin:10px 0 8px; padding-top:8px; border-top:1px solid var(--border);
+    font-size:11.5px;
+  }
+  .dash-pop-status b{ color:var(--text); }
+  .dash-pop-task{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:4px 0; font-size:11.5px; color:var(--muted);
+  }
+  .dash-pop-task.done{ color:var(--success); }
+  .dash-pop-task.pending{ color:var(--danger); }
+  .dash-checkpoint{
+    position:absolute; top:70px; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center;
+    min-width:68px; pointer-events:none;
+  }
+  .dash-checkpoint.edge-end{ transform:translateX(-100%); align-items:flex-end; }
+  .dash-checkpoint-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:#fff; border:2px solid var(--border); margin-bottom:4px;
+  }
+  .dash-checkpoint.done .dash-checkpoint-dot{ background:var(--success); border-color:var(--success); }
+  .dash-checkpoint-label{
+    font-size:9.5px; font-weight:600; color:var(--muted);
+    white-space:nowrap;
+  }
+  .dash-checkpoint.done .dash-checkpoint-label{ color:var(--success); }
+
+  @media (max-width:720px){
+    .dash-day-note{ flex-direction:column; }
+    .dash-day-count{ width:100%; }
+    .dash-avatar-popover{ width:205px; }
+    .dash-checkpoint-label{ font-size:8.5px; }
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1109,6 +1228,37 @@ function showToast(msg, isError=false){
   t.style.display = 'block';
   setTimeout(()=> t.style.display='none', 3200);
 }
+
+function escapeHtml(value){
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function closeDashboardAvatarCards(exceptButton=null){
+  document.querySelectorAll('.dash-path-avatar-button.open').forEach(btn => {
+    if(btn !== exceptButton){
+      btn.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+function toggleDashboardAvatar(event, button){
+  event.stopPropagation();
+  const willOpen = !button.classList.contains('open');
+  closeDashboardAvatarCards(button);
+  button.classList.toggle('open', willOpen);
+  button.setAttribute('aria-expanded', String(willOpen));
+}
+
+document.addEventListener('click', () => closeDashboardAvatarCards());
+document.addEventListener('keydown', (event) => {
+  if(event.key === 'Escape') closeDashboardAvatarCards();
+});
 
 /* ==========================================================
    TAMPIL/SEMBUNYIKAN KATA SANDI (login)
@@ -2657,18 +2807,31 @@ async function submitMoodPilih(mood){
 }
 
 /* ==========================================================
-   MODUL: DASHBOARD KERJA
-   Menampilkan siapa saja walas yang sudah login dan sudah menyelesaikan
-   tugas wajib hari ini (Absensi & Kedisiplinan setiap hari kerja, PjBL
-   khusus Jumat). Bisa dilihat semua role, semua kelas.
+   MODUL: DASHBOARD KERJA HARIAN
+   - Senin-Kamis: Absensi + Kedisiplinan (2 laporan)
+   - Jumat: Absensi + Kedisiplinan + PjBL (3 laporan)
+   - Sabtu/Minggu: tidak ada laporan wajib
+   Urutan: sudah login lebih dahulu, lalu progres tertinggi.
+   Nama walas muncul ketika avatarnya diklik.
    ========================================================== */
 function renderDashboard(content){
   content.innerHTML = `
-    <div class="page-title">Dashboard Kerja Hari Ini</div>
-    <div class="page-sub">Pantau siapa yang sudah login dan menyelesaikan tugas wajib hari ini.</div>
+    <div class="page-title">Dashboard Kerja Harian</div>
+    <div class="page-sub">Avatar bergerak mengikuti laporan yang selesai pada hari ini. Klik avatar untuk melihat nama dan rinciannya.</div>
     <div id="dash-body"><div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(180,39,43,0.25)"></span>Memuat data...</div></div>
   `;
   loadDashboard();
+}
+
+function formatTanggalDashboard(tanggalYmd){
+  try{
+    return new Intl.DateTimeFormat('id-ID', {
+      weekday:'long', day:'numeric', month:'long', year:'numeric',
+      timeZone:'Asia/Jakarta'
+    }).format(new Date(tanggalYmd + 'T12:00:00+07:00'));
+  } catch(err){
+    return tanggalYmd;
+  }
 }
 
 async function loadDashboard(){
@@ -2680,23 +2843,46 @@ async function loadDashboard(){
   }
 
   if(!res.isHariKerja){
-    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Hari ini (Sabtu/Minggu) tidak ada tugas wajib yang dipantau.</div>`;
+    body.innerHTML = `
+      <div class="dash-day-note">
+        <div><strong>${escapeHtml(formatTanggalDashboard(res.tanggal))}</strong><span>Sabtu dan Minggu tidak memiliki laporan wajib. Data hari kerja sebelumnya tetap tersimpan di spreadsheet.</span></div>
+        <div class="dash-day-count">0 laporan</div>
+      </div>
+      <div class="empty-state"><div class="icon">—</div>Tidak ada perjalanan laporan hari ini.</div>
+    `;
     return;
   }
 
-  const data = res.data || [];
+  // Frontend ikut mengurutkan agar urutan tetap benar walau backend lama
+  // belum sempat dideploy: sudah login dahulu, lalu progres terbesar.
+  const data = (res.data || []).slice().sort((a, b) => {
+    if(Boolean(a.sudahLogin) !== Boolean(b.sudahLogin)) return a.sudahLogin ? -1 : 1;
+    if(Number(a.persentase) !== Number(b.persentase)) return Number(b.persentase) - Number(a.persentase);
+    return String(a.nama || '').localeCompare(String(b.nama || ''), 'id');
+  });
+
+  const jumlahLaporanHariIni = res.isJumat ? 3 : 2;
   const sudahLoginCount = data.filter(d => d.sudahLogin).length;
-  const selesai100Count = data.filter(d => d.persentase >= 100).length;
-  const belumApaCount = data.filter(d => !d.sudahLogin).length;
+  const selesai100Count = data.filter(d => d.sudahLogin && Number(d.persentase) >= 100).length;
+  const belumLoginCount = data.filter(d => !d.sudahLogin).length;
+  const laporanText = res.isJumat
+    ? 'Hari Jumat memiliki 3 laporan wajib: Absensi, Kedisiplinan, dan PjBL.'
+    : 'Senin sampai Kamis memiliki 2 laporan wajib: Absensi dan Kedisiplinan.';
 
   body.innerHTML = `
-    <div class="dash-summary">
-      <div class="dash-summary-box"><div class="num">${sudahLoginCount}/${data.length}</div><div class="lbl">Sudah Login</div></div>
-      <div class="dash-summary-box"><div class="num" style="color:var(--success)">${selesai100Count}</div><div class="lbl">Tugas 100% Selesai</div></div>
-      <div class="dash-summary-box"><div class="num" style="color:var(--danger)">${belumApaCount}</div><div class="lbl">Belum Login Sama Sekali</div></div>
+    <div class="dash-day-note">
+      <div>
+        <strong>${escapeHtml(formatTanggalDashboard(res.tanggal))}</strong>
+        <span>${laporanText} Progres akan dihitung ulang otomatis setiap berganti hari.</span>
+      </div>
+      <div class="dash-day-count">${jumlahLaporanHariIni} laporan</div>
     </div>
-    ${res.isJumat ? '<div style="font-size:11.5px;color:var(--muted);margin-bottom:14px;">Hari ini Jumat — PjBL ikut dihitung sebagai tugas wajib.</div>' : ''}
-    <div class="card"><div id="dash-list"></div></div>
+    <div class="dash-summary">
+      <div class="dash-summary-box"><div class="num">${sudahLoginCount}/${data.length}</div><div class="lbl">Sudah Login Hari Ini</div></div>
+      <div class="dash-summary-box"><div class="num" style="color:var(--success)">${selesai100Count}</div><div class="lbl">Login + Semua Selesai</div></div>
+      <div class="dash-summary-box"><div class="num" style="color:var(--danger)">${belumLoginCount}</div><div class="lbl">Belum Login Hari Ini</div></div>
+    </div>
+    <div class="card dash-list-card"><div id="dash-list"></div></div>
   `;
 
   const list = document.getElementById('dash-list');
@@ -2705,53 +2891,66 @@ async function loadDashboard(){
     return;
   }
 
-  data.forEach(d => {
-    const cls = d.persentase >= 100 ? 'tinggi' : (d.persentase >= 50 ? 'sedang' : 'rendah');
-    const moodOpt = MOOD_OPTIONS.find(m => m.value === d.mood);
-    const moodDisplay = moodOpt
-      ? `<span class="mood-emoji" style="font-size:20px;">${moodOpt.emoji}</span>`
-      : `<span style="font-size:11px;color:var(--muted);opacity:.6;">-</span>`;
-
+  data.forEach((d, index) => {
+    const tugas = Array.isArray(d.tugas) ? d.tugas : [];
+    const totalTugas = Number(d.totalTugas ?? tugas.length);
+    const selesaiCount = Number(d.selesaiCount ?? tugas.filter(t => t.selesai).length);
+    const persentase = Math.max(0, Math.min(100, Number(d.persentase) || 0));
+    const avatarPos = 2 + (persentase * 0.96); // 0%=2%, 100%=98%
+    const avatarEdgeClass = avatarPos < 18 ? 'edge-start' : (avatarPos > 82 ? 'edge-end' : '');
     const avatarSrc = (d.avatar && AVATAR_DATA[d.avatar]) ? AVATAR_DATA[d.avatar] : null;
-    // Posisi avatar di sepanjang track disesuaikan dikit biar di 100% tidak
-    // nyender pas di ujung banget (masih kelihatan penuh badannya).
-    const posPersen = Math.max(4, Math.min(96, d.persentase));
+    const initial = String(d.nama || '?').trim().charAt(0).toUpperCase() || '?';
+    const isComplete = Boolean(d.sudahLogin) && persentase >= 100;
+
+    const checkpointHtml = tugas.map((t, taskIndex) => {
+      const ratio = totalTugas > 0 ? ((taskIndex + 1) / totalTugas) : 0;
+      const pos = 2 + (ratio * 96);
+      const edgeClass = taskIndex === tugas.length - 1 ? 'edge-end' : '';
+      return `
+        <span class="dash-checkpoint ${t.selesai ? 'done' : ''} ${edgeClass}" style="left:${pos}%">
+          <span class="dash-checkpoint-dot"></span>
+          <span class="dash-checkpoint-label">${escapeHtml(t.nama)}</span>
+        </span>`;
+    }).join('');
+
+    const popoverTaskHtml = tugas.map(t => `
+      <span class="dash-pop-task ${t.selesai ? 'done' : 'pending'}">
+        <span>${escapeHtml(t.nama)}</span>
+        <b>${t.selesai ? 'Selesai' : 'Belum'}</b>
+      </span>`).join('');
 
     const row = document.createElement('div');
-    row.className = 'dash-row';
+    row.className = 'dash-row' + (isComplete ? ' is-complete' : '') + (!d.sudahLogin ? ' is-offline' : '');
     row.innerHTML = `
       <div class="dash-row-top">
-        <div class="dash-row-left">
-          ${moodDisplay}
-          <div>
-            <div class="dash-name">${d.nama}</div>
-            <div class="dash-kelas">${d.kelas || '-'}</div>
-          </div>
+        <div class="dash-lane-left">
+          <span class="dash-order">${index + 1}</span>
           <span class="dash-login-badge ${d.sudahLogin ? 'ya' : 'belum'}">${d.sudahLogin ? 'Sudah login' : 'Belum login'}</span>
         </div>
-        <div class="dash-persen ${cls}">${d.persentase}%</div>
+        <div class="dash-lane-progress">${selesaiCount}/${totalTugas} laporan · ${persentase}%</div>
       </div>
       <div class="dash-path-track">
         <div class="dash-path-line"></div>
-        <div class="dash-path-line-fill ${cls==='tinggi'?'':cls}" style="width:calc(${posPersen}% - 6px)"></div>
-        <svg class="dash-path-finish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h9l-2 4 2 4H6"/></svg>
-        ${avatarSrc
-          ? `<img class="dash-path-avatar" src="${avatarSrc}" style="left:${posPersen}%" alt="Avatar ${d.avatar}" loading="lazy" referrerpolicy="no-referrer" onerror="avatarImageError(this, '${d.avatar}')">`
-          : `<div class="dash-path-avatar" style="left:${posPersen}%;width:12px;height:12px;border-radius:50%;background:var(--muted);opacity:.5;transform:translate(-50%,-50%);"></div>`
-        }
+        <div class="dash-path-line-fill" style="width:${persentase}%"></div>
+        <svg class="dash-path-finish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4a1 1 0 0 1 1-1h9l-2 4 2 4H6"/></svg>
+        ${checkpointHtml}
+        <button type="button" class="dash-path-avatar-button ${avatarEdgeClass}" style="left:${avatarPos}%" aria-expanded="false" aria-label="Lihat nama walas" onclick="toggleDashboardAvatar(event, this)">
+          ${avatarSrc
+            ? `<img class="dash-path-avatar" src="${avatarSrc}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="avatarImageError(this, '${escapeHtml(d.avatar)}')">`
+            : `<span class="dash-avatar-fallback">${escapeHtml(initial)}</span>`
+          }
+          <span class="dash-avatar-popover" onclick="event.stopPropagation()">
+            <span class="dash-pop-name">${escapeHtml(d.nama || '-')}</span>
+            <span class="dash-pop-class">${escapeHtml(d.kelas || '-')}</span>
+            <span class="dash-pop-status">
+              <span>${d.sudahLogin ? 'Sudah login hari ini' : 'Belum login hari ini'}</span>
+              <b>${selesaiCount}/${totalTugas}</b>
+            </span>
+            ${popoverTaskHtml}
+          </span>
+        </button>
       </div>
-      <div class="dash-tugas-list"></div>
     `;
-    const tugasList = row.querySelector('.dash-tugas-list');
-    d.tugas.forEach(t => {
-      const chip = document.createElement('span');
-      chip.className = 'dash-tugas-chip ' + (t.selesai ? 'selesai' : 'belum');
-      chip.innerHTML = (t.selesai
-        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
-        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
-      ) + t.nama;
-      tugasList.appendChild(chip);
-    });
     list.appendChild(row);
   });
 }
