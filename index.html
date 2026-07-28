@@ -981,6 +981,49 @@
     .dash-checkpoint-label{ font-size:8px; }
     .dash-lane-progress{ font-size:10.5px; }
   }
+
+  /* ===== MODUL CATATAN MASALAH SISWA TANPA API AI ===== */
+  .ms-tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--surface);padding:4px;border:1px solid var(--border);border-radius:9px;width:fit-content;}
+  .ms-tab{border:none;background:transparent;padding:9px 16px;border-radius:7px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;}
+  .ms-tab.active{background:var(--primary);color:#fff;}
+  .ms-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .ms-field{margin-bottom:15px;}
+  .ms-field label{display:block;font-size:12.5px;font-weight:700;margin-bottom:7px;color:var(--text);}
+  .ms-field select,.ms-field input,.ms-field textarea{width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:9px;font-family:inherit;font-size:13.5px;background:#FDFCFA;color:var(--text);}
+  .ms-field textarea{resize:vertical;min-height:92px;line-height:1.6;}
+  .ms-field textarea.ms-story{min-height:190px;}
+  .ms-field select:focus,.ms-field input:focus,.ms-field textarea:focus{outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 3px rgba(180,39,43,.08);}
+  .ms-help{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:6px;}
+  .ms-ai-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;}
+  .ms-ai-title{font-size:16px;font-weight:800;color:var(--primary-dark);}
+  .ms-badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;}
+  .ms-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 9px;border-radius:20px;font-size:10.5px;font-weight:800;background:var(--bg);border:1px solid var(--border);color:var(--muted);}
+  .ms-badge.attention{background:#FFF5D9;border-color:#E8CE83;color:#8A681E;}
+  .ms-badge.urgent{background:#FBE3DE;border-color:#E8AEA2;color:var(--danger);}
+  .ms-badge.safe{background:#EAF3ED;border-color:#CDE5D6;color:var(--success);}
+  .ms-alert{border:1px solid #E7B5A9;background:#FBEDE8;color:#8C2F20;border-radius:10px;padding:13px 15px;font-size:12.5px;line-height:1.55;margin-bottom:14px;}
+  .ms-ai-section{border-top:1px solid var(--border);padding:14px 0;}
+  .ms-ai-section:first-of-type{border-top:none;padding-top:0;}
+  .ms-ai-section h4{font-size:12px;text-transform:uppercase;letter-spacing:.045em;color:var(--muted);margin-bottom:8px;}
+  .ms-ai-section p{font-size:13.5px;line-height:1.65;white-space:pre-wrap;}
+  .ms-ai-list{padding-left:18px;color:var(--text);}
+  .ms-ai-list li{font-size:13.5px;line-height:1.6;margin-bottom:5px;}
+  .ms-final-box{background:#FAF8F3;border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:8px;}
+  .ms-actions{display:flex;gap:10px;align-items:center;margin-top:16px;}
+  .ms-actions .btn{width:auto;min-width:180px;}
+  .ms-history-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .ms-history-list{display:flex;flex-direction:column;gap:12px;}
+  .ms-history-card{border:1px solid var(--border);border-radius:11px;background:#fff;padding:16px 17px;}
+  .ms-history-top{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;}
+  .ms-history-name{font-size:14px;font-weight:800;color:var(--primary-dark);}
+  .ms-history-meta{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .ms-history-summary{font-size:13px;line-height:1.6;margin-top:12px;color:var(--text);}
+  .ms-history-detail{display:none;border-top:1px solid var(--border);margin-top:12px;padding-top:12px;}
+  .ms-history-card.open .ms-history-detail{display:block;}
+  .ms-link-btn{border:none;background:none;color:var(--primary);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:4px 0;}
+  .ms-status{font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:20px;background:var(--bg);border:1px solid var(--border);white-space:nowrap;}
+  .ms-char-count{text-align:right;font-size:11px;color:var(--muted);margin-top:4px;}
+  @media(max-width:720px){.ms-grid{grid-template-columns:1fr}.ms-ai-head,.ms-history-top{flex-direction:column}.ms-actions{flex-direction:column;align-items:stretch}.ms-actions .btn{width:100%}.ms-tabs{width:100%}.ms-tab{flex:1}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -1623,7 +1666,7 @@ const MODULES = [
   { id:'pjbl',         label:'PJBL',                   roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderPjBL },
   { id:'kedisiplinan', label:'Kedisiplinan',           roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderKedisiplinan },
 
-  { id:'masalah',      label:'Masalah Siswa',          roles:['walas','kesiswaan','pimpinan'], built:false },
+  { id:'masalah',      label:'Masalah Siswa',          roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderMasalahSiswa },
   { id:'prestasi',     label:'Prestasi / Lomba',       roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'akademik',     label:'Akademik',                roles:['walas','kesiswaan','pimpinan'], built:false },
   { id:'ekskul',       label:'Ekskul',                 roles:['walas','kesiswaan','pimpinan'], built:false },
@@ -1701,6 +1744,396 @@ function setActiveModule(id){
     content.innerHTML = `<div class="empty-state"><div class="icon">—</div>Modul ini belum dibangun.</div>`;
   }
 }
+
+/* ==========================================================
+   MODUL: CATATAN MASALAH SISWA + REKOMENDASI SISTEM
+   Form dibuat sederhana: pilih siswa, lalu walas bercerita.
+   Master masalah dan rekomendasi dibaca backend dari Spreadsheet.
+   ========================================================== */
+let masalahState = {
+  kelas: null,
+  siswa: [],
+  tab: 'baru',
+  analisisAI: null,
+  riwayat: []
+};
+
+function todayStrMasalah(){
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+
+function renderMasalahSiswa(content){
+  const isWalas = currentUser.role === 'walas';
+  masalahState.analisisAI = null;
+  content.innerHTML = `
+    <div class="page-title">Catatan Masalah Siswa</div>
+    <div class="page-sub">Pilih siswa, ceritakan kejadian secara faktual, lalu sistem mencocokkannya dengan master masalah di Spreadsheet.</div>
+
+    ${!isWalas ? `
+      <div class="card">
+        <div class="card-title">Pilih Kelas</div>
+        <input type="text" id="ms-kelas-input" placeholder="Ketik nama kelas persis, contoh: 3A Banat"
+          style="width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;">
+      </div>` : ''}
+    <div id="ms-body"></div>
+  `;
+
+  if(isWalas){
+    masalahState.kelas = currentUser.kelas;
+    loadMasalahKelas();
+  } else {
+    const input = document.getElementById('ms-kelas-input');
+    input.addEventListener('change', () => {
+      masalahState.kelas = input.value.trim();
+      loadMasalahKelas();
+    });
+  }
+}
+
+async function loadMasalahKelas(){
+  if(!masalahState.kelas) return;
+  const body = document.getElementById('ms-body');
+  body.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(180,39,43,.25)"></span>Memuat data siswa...</div>`;
+  const res = await callApi('getSiswaByKelas', { kelas: masalahState.kelas });
+  masalahState.siswa = (res.data || []).slice().sort((a,b) => String(a.nama).localeCompare(String(b.nama), 'id'));
+  renderMasalahShell();
+}
+
+function renderMasalahShell(){
+  const body = document.getElementById('ms-body');
+  if(!body) return;
+  if(!masalahState.siswa.length){
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Belum ada data siswa untuk kelas ${escapeHtml(masalahState.kelas || '-')}.</div>`;
+    return;
+  }
+
+  body.innerHTML = `
+    <div class="ms-tabs">
+      <button class="ms-tab ${masalahState.tab==='baru'?'active':''}" onclick="switchMasalahTab('baru')">+ Laporan Baru</button>
+      <button class="ms-tab ${masalahState.tab==='riwayat'?'active':''}" onclick="switchMasalahTab('riwayat')">Riwayat</button>
+    </div>
+    <div id="ms-tab-content"></div>
+  `;
+  renderMasalahTab();
+}
+
+function switchMasalahTab(tab){
+  masalahState.tab = tab;
+  masalahState.analisisAI = null;
+  renderMasalahShell();
+}
+
+function renderMasalahTab(){
+  if(masalahState.tab === 'riwayat') loadRiwayatMasalah();
+  else renderFormMasalah();
+}
+
+function renderFormMasalah(){
+  const area = document.getElementById('ms-tab-content');
+  const siswaOptions = masalahState.siswa.map(s => `<option value="${escapeHtml(s.nis)}">${escapeHtml(s.nama)} — ${escapeHtml(s.nis)}</option>`).join('');
+  area.innerHTML = `
+    <div class="card">
+      <div class="card-title">Laporan Naratif Walas</div>
+      <div class="ms-grid">
+        <div class="ms-field">
+          <label>Nama siswa</label>
+          <select id="ms-siswa"><option value="">— pilih siswa —</option>${siswaOptions}</select>
+        </div>
+        <div class="ms-field">
+          <label>Tanggal kejadian</label>
+          <input type="date" id="ms-tanggal" value="${todayStrMasalah()}">
+        </div>
+      </div>
+
+      <div class="ms-field">
+        <label>Ceritakan masalah atau kejadian</label>
+        <textarea id="ms-cerita" class="ms-story" maxlength="5000" oninput="updateMasalahCount()" placeholder="Contoh: Saat pelajaran Matematika pukul 09.15, siswa meninggalkan kursi beberapa kali, berbicara kepada teman, dan belum mulai mengerjakan meskipun instruksi sudah diulang. Setelah tugas dibagi menjadi tiga bagian dan duduk dekat guru, siswa mulai mengerjakan..."></textarea>
+        <div class="ms-char-count" id="ms-char-count">0 / 5000</div>
+        <div class="ms-help">Tuliskan fakta yang terlihat atau terdengar: situasi, perilaku, pihak terlibat, frekuensi, dan dampaknya. Hindari label seperti “nakal”, “malas”, atau diagnosis. Gunakan “siswa lain” untuk pihak lain bila memungkinkan dan hindari mencantumkan informasi keluarga yang tidak relevan.</div>
+      </div>
+
+      <div class="ms-field">
+        <label>Tindakan awal yang sudah dilakukan <span style="font-weight:400;color:var(--muted)">(opsional)</span></label>
+        <textarea id="ms-tindakan" placeholder="Contoh: Sudah diajak bicara secara pribadi, dipindahkan tempat duduk, atau diberi waktu menenangkan diri."></textarea>
+      </div>
+
+      <div class="ms-field" style="max-width:360px">
+        <label>Apakah ada risiko keselamatan?</label>
+        <select id="ms-risiko">
+          <option value="Tidak">Tidak</option>
+          <option value="Tidak yakin">Tidak yakin</option>
+          <option value="Ya">Ya</option>
+        </select>
+        <div class="ms-help">Pilih “Ya” untuk kekerasan, ancaman, pelecehan, menyakiti diri/orang lain, benda berbahaya, atau siswa merasa tidak aman.</div>
+      </div>
+
+      <div class="ms-actions">
+        <button class="btn" id="ms-ai-btn" onclick="generateSaranMasalahAI()">Analisis & Buat Saran Penanganan</button>
+        <span class="ms-help">Rekomendasi berasal dari master Spreadsheet dan wajib ditinjau walas sebelum disimpan.</span>
+      </div>
+    </div>
+    <div id="ms-ai-result"></div>
+  `;
+}
+
+function updateMasalahCount(){
+  const el = document.getElementById('ms-cerita');
+  const count = document.getElementById('ms-char-count');
+  if(el && count) count.textContent = `${el.value.length} / 5000`;
+}
+
+function getSelectedSiswaMasalah(){
+  const nis = document.getElementById('ms-siswa')?.value || '';
+  return masalahState.siswa.find(s => String(s.nis) === String(nis)) || null;
+}
+
+async function generateSaranMasalahAI(){
+  const siswa = getSelectedSiswaMasalah();
+  const tanggal = document.getElementById('ms-tanggal').value;
+  const cerita = document.getElementById('ms-cerita').value.trim();
+  const tindakan = document.getElementById('ms-tindakan').value.trim();
+  const risiko = document.getElementById('ms-risiko').value;
+  const btn = document.getElementById('ms-ai-btn');
+  const result = document.getElementById('ms-ai-result');
+
+  if(!siswa){ showToast('Pilih nama siswa terlebih dahulu.', true); return; }
+  if(!tanggal){ showToast('Tanggal kejadian wajib diisi.', true); return; }
+  if(cerita.length < 20){ showToast('Cerita kejadian masih terlalu singkat.', true); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Sistem sedang menyusun saran...';
+  result.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(180,39,43,.25)"></span>Mencocokkan cerita dengan kata kunci dan master masalah di Spreadsheet...</div>`;
+
+  try{
+    const res = await callApi('analisisMasalahSiswa', {
+      kelas: masalahState.kelas,
+      nis: siswa.nis,
+      namaSiswa: siswa.nama,
+      tanggalKejadian: tanggal,
+      ceritaWalas: cerita,
+      tindakanAwal: tindakan,
+      risikoKeselamatan: risiko
+    });
+    if(!res.success){
+      const pesan = {
+        cerita_terlalu_singkat: 'Cerita kejadian masih terlalu singkat.',
+      };
+      throw new Error(pesan[res.error] || res.error || 'Analisis sistem gagal.');
+    }
+    masalahState.analisisAI = res.data;
+    renderHasilMasalahAI(siswa, tanggal, cerita, tindakan, risiko);
+  }catch(err){
+    result.innerHTML = `<div class="card"><div class="ms-alert"><strong>Analisis belum berhasil.</strong><br>${escapeHtml(err.message || 'Gagal membaca master masalah di Spreadsheet.')}</div></div>`;
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Analisis Ulang';
+  }
+}
+
+function renderListMasalah(items){
+  const arr = Array.isArray(items) ? items : [];
+  if(!arr.length) return '<p style="color:var(--muted)">Belum ada saran.</p>';
+  return `<ul class="ms-ai-list">${arr.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`;
+}
+
+function formatSaranFinalMasalah(ai){
+  const list = (title, values) => {
+    const arr = Array.isArray(values) ? values : [];
+    return arr.length ? `\n${title}\n${arr.map(x => '- ' + x).join('\n')}` : '';
+  };
+  return [
+    `RINGKASAN SITUASI\n${ai.ringkasan || '-'}`,
+    list('KEMUNGKINAN KEBUTUHAN SISWA', ai.kemungkinanKebutuhan),
+    list('TUJUAN PENDAMPINGAN', ai.tujuanPendampingan),
+    list('PENANGANAN LANGSUNG', ai.penangananLangsung),
+    list('STRATEGI DI KELAS', ai.strategiKelas),
+    ai.kalimatGuru ? `\nCONTOH KALIMAT GURU\n${ai.kalimatGuru}` : '',
+    ai.saranOrangTua ? `\nKOORDINASI ORANG TUA\n${ai.saranOrangTua}` : '',
+    list('RENCANA PEMANTAUAN', ai.rencanaPemantauan),
+    list('INDIKATOR PERBAIKAN', ai.indikatorPerbaikan),
+    ai.saranEskalasi ? `\nKAPAN PERLU DITERUSKAN\n${ai.saranEskalasi}` : '',
+    list('HAL YANG PERLU DIHINDARI', ai.halDihindari)
+  ].filter(Boolean).join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+
+function renderHasilMasalahAI(siswa, tanggal, cerita, tindakan, risiko){
+  const ai = masalahState.analisisAI;
+  const result = document.getElementById('ms-ai-result');
+  const urgent = Boolean(ai.mendesak) || risiko === 'Ya';
+  const flags = [
+    ai.perluOrangTua ? 'Orang tua' : '',
+    ai.perluKesiswaan ? 'Kesiswaan' : '',
+    ai.perluUKS ? 'UKS' : ''
+  ].filter(Boolean);
+  const finalText = formatSaranFinalMasalah(ai);
+
+  result.innerHTML = `
+    <div class="card">
+      ${urgent ? `<div class="ms-alert"><strong>Perlu perhatian segera.</strong><br>Utamakan keselamatan siswa dan teruskan kepada kesiswaan/pimpinan sekolah sesuai prosedur perlindungan anak. Rekomendasi sistem tidak menggantikan penanganan resmi sekolah.</div>` : ''}
+      <div class="ms-ai-head">
+        <div>
+          <div class="ms-ai-title">Hasil Analisis &amp; Rekomendasi Sistem</div>
+          <div class="ms-badges">
+            <span class="ms-badge">${escapeHtml(ai.kategori || '-')}</span>
+            <span class="ms-badge attention">${escapeHtml(ai.tingkatPerhatian || '-')}</span>
+            ${typeof ai.tingkatKecocokan === 'number' ? `<span class="ms-badge">Kecocokan ${escapeHtml(String(ai.tingkatKecocokan))}%</span>` : ''}
+            <span class="ms-badge ${urgent?'urgent':'safe'}">${urgent?'Mendesak':'Perlu ditinjau walas'}</span>
+            ${flags.map(x => `<span class="ms-badge">Koordinasi: ${escapeHtml(x)}</span>`).join('')}
+          </div>
+        </div>
+        <div style="font-size:11.5px;color:var(--muted);text-align:right">Evaluasi: <strong>${escapeHtml(ai.tanggalEvaluasi || '-')}</strong></div>
+      </div>
+
+      <div class="ms-ai-section"><h4>Masalah utama</h4><p>${escapeHtml(ai.masalahUtama || '-')}</p></div>
+      <div class="ms-ai-section"><h4>Ringkasan situasi</h4><p>${escapeHtml(ai.ringkasan || '-')}</p></div>
+      <div class="ms-grid">
+        <div class="ms-ai-section"><h4>Kemungkinan kebutuhan siswa</h4>${renderListMasalah(ai.kemungkinanKebutuhan)}</div>
+        <div class="ms-ai-section"><h4>Tujuan pendampingan</h4>${renderListMasalah(ai.tujuanPendampingan)}</div>
+      </div>
+      <div class="ms-ai-section"><h4>Penanganan langsung</h4>${renderListMasalah(ai.penangananLangsung)}</div>
+      <div class="ms-ai-section"><h4>Strategi di kelas</h4>${renderListMasalah(ai.strategiKelas)}</div>
+      <div class="ms-ai-section"><h4>Contoh kalimat guru</h4><p>${escapeHtml(ai.kalimatGuru || '-')}</p></div>
+      <div class="ms-ai-section"><h4>Koordinasi dengan orang tua</h4><p>${escapeHtml(ai.saranOrangTua || '-')}</p></div>
+      <div class="ms-grid">
+        <div class="ms-ai-section"><h4>Rencana pemantauan</h4>${renderListMasalah(ai.rencanaPemantauan)}</div>
+        <div class="ms-ai-section"><h4>Indikator perbaikan</h4>${renderListMasalah(ai.indikatorPerbaikan)}</div>
+      </div>
+      <div class="ms-ai-section"><h4>Kapan perlu diteruskan</h4><p>${escapeHtml(ai.saranEskalasi || '-')}</p></div>
+      <div class="ms-ai-section"><h4>Hal yang perlu dihindari</h4>${renderListMasalah(ai.halDihindari)}</div>
+
+      <div class="ms-final-box">
+        <div class="ms-field" style="margin:0">
+          <label>Saran final setelah ditinjau walas</label>
+          <textarea id="ms-saran-final" style="min-height:320px">${escapeHtml(finalText)}</textarea>
+          <div class="ms-help">Boleh diedit sebelum disimpan. Rekomendasi sistem adalah bahan bantu, bukan keputusan otomatis.</div>
+        </div>
+      </div>
+
+      <div class="ms-actions">
+        <button class="btn" id="ms-save-btn" onclick="saveCatatanMasalah()">Simpan Laporan</button>
+        <button class="btn btn-outline" onclick="document.getElementById('ms-ai-btn').scrollIntoView({behavior:'smooth'})">Perbaiki Cerita / Buat Ulang</button>
+      </div>
+    </div>
+  `;
+
+  result.dataset.nis = siswa.nis;
+  result.dataset.nama = siswa.nama;
+  result.dataset.tanggal = tanggal;
+  result.dataset.cerita = cerita;
+  result.dataset.tindakan = tindakan;
+  result.dataset.risiko = risiko;
+  result.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+async function saveCatatanMasalah(){
+  const result = document.getElementById('ms-ai-result');
+  const btn = document.getElementById('ms-save-btn');
+  const saranFinal = document.getElementById('ms-saran-final').value.trim();
+  if(!masalahState.analisisAI){ showToast('Buat analisis terlebih dahulu.', true); return; }
+  if(!saranFinal){ showToast('Saran final tidak boleh kosong.', true); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Menyimpan...';
+  try{
+    const res = await callApi('submitCatatanMasalahSiswa', {
+      kelas: masalahState.kelas,
+      nis: result.dataset.nis,
+      namaSiswa: result.dataset.nama,
+      tanggalKejadian: result.dataset.tanggal,
+      ceritaWalas: result.dataset.cerita,
+      tindakanAwal: result.dataset.tindakan,
+      risikoKeselamatan: result.dataset.risiko,
+      rekomendasiSistem: masalahState.analisisAI,
+      saranFinal,
+      status: masalahState.analisisAI.mendesak ? 'Diteruskan ke Kesiswaan' : 'Baru',
+      dicatatOleh: currentUser.nama
+    });
+    if(!res.success) throw new Error(res.error || 'Gagal menyimpan laporan.');
+    showToast('Laporan masalah siswa berhasil disimpan.');
+    masalahState.analisisAI = null;
+    masalahState.tab = 'riwayat';
+    renderMasalahShell();
+  }catch(err){
+    showToast(err.message || 'Gagal menyimpan laporan.', true);
+  }finally{
+    if(document.getElementById('ms-save-btn')){
+      btn.disabled = false;
+      btn.textContent = 'Simpan Laporan';
+    }
+  }
+}
+
+async function loadRiwayatMasalah(){
+  const area = document.getElementById('ms-tab-content');
+  area.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(180,39,43,.25)"></span>Memuat riwayat laporan...</div>`;
+  const res = await callApi('getCatatanMasalahSiswa', { kelas: masalahState.kelas, limit: 100 });
+  masalahState.riwayat = res.data || [];
+  renderRiwayatMasalah();
+}
+
+function renderRiwayatMasalah(){
+  const area = document.getElementById('ms-tab-content');
+  if(!masalahState.riwayat.length){
+    area.innerHTML = `<div class="empty-state"><div class="icon">—</div>Belum ada catatan masalah siswa untuk kelas ini.</div>`;
+    return;
+  }
+  area.innerHTML = `
+    <div class="card">
+      <div class="ms-history-toolbar">
+        <div><div class="card-title" style="margin:0">Riwayat Catatan</div><div class="ms-help">${masalahState.riwayat.length} laporan terbaru</div></div>
+        <input type="search" id="ms-history-search" placeholder="Cari nama atau masalah..." oninput="filterRiwayatMasalah()" style="max-width:280px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-family:inherit">
+      </div>
+      <div class="ms-history-list" id="ms-history-list"></div>
+    </div>
+  `;
+  drawRiwayatMasalah(masalahState.riwayat);
+}
+
+function filterRiwayatMasalah(){
+  const q = (document.getElementById('ms-history-search').value || '').toLowerCase().trim();
+  const list = masalahState.riwayat.filter(r => [r.namaSiswa,r.masalahUtama,r.kategori,r.ringkasan,r.status].join(' ').toLowerCase().includes(q));
+  drawRiwayatMasalah(list);
+}
+
+function drawRiwayatMasalah(data){
+  const list = document.getElementById('ms-history-list');
+  if(!list) return;
+  if(!data.length){ list.innerHTML = `<div class="empty-state" style="padding:30px 10px">Tidak ada laporan yang cocok.</div>`; return; }
+  list.innerHTML = data.map((r,index) => {
+    const urgent = Boolean(r.mendesak);
+    const flags = [r.perluOrangTua?'Orang tua':'',r.perluKesiswaan?'Kesiswaan':'',r.perluUKS?'UKS':''].filter(Boolean).join(', ');
+    return `
+      <div class="ms-history-card" id="ms-history-${index}">
+        <div class="ms-history-top">
+          <div>
+            <div class="ms-history-name">${escapeHtml(r.namaSiswa || '-')}</div>
+            <div class="ms-history-meta">${escapeHtml(r.tanggalKejadian || '-')} · ${escapeHtml(r.kategori || '-')} · ${escapeHtml(r.tingkatPerhatian || '-')}</div>
+          </div>
+          <span class="ms-status" style="${urgent?'background:#FBE3DE;border-color:#E8AEA2;color:var(--danger)':''}">${escapeHtml(r.status || 'Baru')}</span>
+        </div>
+        <div class="ms-history-summary"><strong>${escapeHtml(r.masalahUtama || '-')}</strong><br>${escapeHtml(r.ringkasan || '')}</div>
+        <button class="ms-link-btn" onclick="toggleRiwayatMasalah('ms-history-${index}',this)">Lihat detail</button>
+        <div class="ms-history-detail">
+          <div class="ms-ai-section"><h4>Cerita walas</h4><p>${escapeHtml(r.ceritaWalas || '-')}</p></div>
+          <div class="ms-ai-section"><h4>Tindakan awal</h4><p>${escapeHtml(r.tindakanAwal || '-')}</p></div>
+          <div class="ms-ai-section"><h4>Saran final</h4><p>${escapeHtml(r.saranFinal || '-')}</p></div>
+          <div class="ms-help">Evaluasi: ${escapeHtml(r.tanggalEvaluasi || '-')} ${flags ? '· Koordinasi: '+escapeHtml(flags) : ''} · Dicatat oleh: ${escapeHtml(r.dicatatOleh || '-')}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleRiwayatMasalah(id,button){
+  const card = document.getElementById(id);
+  if(!card) return;
+  const open = card.classList.toggle('open');
+  button.textContent = open ? 'Tutup detail' : 'Lihat detail';
+}
+
 
 /* ==========================================================
    MODUL: ABSENSI (Morning Talk)
