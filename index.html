@@ -1350,8 +1350,30 @@ async function hashPassword(username, password){
    ========================================================== */
 async function callApi(action, params={}){
   const body = JSON.stringify({ action, secret: APP_SECRET, ...params });
-  const res = await fetch(APPS_SCRIPT_URL, { method:'POST', body });
-  const data = await res.json();
+  let res;
+  try{
+    res = await fetch(APPS_SCRIPT_URL, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body,
+      redirect:'follow'
+    });
+  }catch(networkErr){
+    throw new Error('Tidak dapat terhubung ke backend Google Apps Script. Periksa koneksi dan URL deployment.');
+  }
+
+  const raw = await res.text();
+  let data;
+  try{
+    data = JSON.parse(raw);
+  }catch(parseErr){
+    const looksHtml = /^\s*<!doctype|^\s*<html/i.test(raw || '');
+    if(looksHtml){
+      throw new Error('Backend mengembalikan halaman HTML, bukan JSON. Atur deployment Web App menjadi Execute as: Me dan Who has access: Anyone, lalu salin URL /exec terbaru ke APPS_SCRIPT_URL.');
+    }
+    throw new Error('Respons backend bukan JSON yang valid. Status HTTP: ' + res.status + '.');
+  }
+
   if(!data.success && action !== 'login' && action !== 'gantiPassword' && action !== 'gantiUsername'){
     showToast(data.error || 'Terjadi kesalahan', true);
   }
