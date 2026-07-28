@@ -760,152 +760,226 @@
   /* ===== MOOD (emoji) ===== */
   .mood-option .mood-emoji{ font-size:28px; line-height:1; }
 
-  /* ===== DASHBOARD HARIAN: BAR PERJALANAN ===== */
+  /* ===== DASHBOARD HARIAN: BALAPAN LAPORAN ===== */
   .dash-day-note{
     display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
-    background:var(--surface); border:1px solid var(--border); border-radius:10px;
-    padding:14px 16px; margin-bottom:16px;
+    background:linear-gradient(135deg,#fff 0%,#FBF8F4 100%);
+    border:1px solid var(--border); border-radius:12px;
+    padding:15px 17px; margin-bottom:16px;
   }
   .dash-day-note strong{ display:block; color:var(--primary-dark); font-size:13.5px; margin-bottom:3px; }
-  .dash-day-note span{ color:var(--muted); font-size:12px; line-height:1.5; }
+  .dash-day-note span{ color:var(--muted); font-size:12px; line-height:1.55; }
   .dash-day-count{
-    flex-shrink:0; min-width:92px; text-align:center; border-radius:8px;
-    background:var(--bg); border:1px solid var(--border); padding:8px 10px;
+    flex-shrink:0; min-width:98px; text-align:center; border-radius:9px;
+    background:#fff; border:1px solid var(--border); padding:9px 11px;
     color:var(--primary-dark); font-size:12px; font-weight:700;
+    box-shadow:0 3px 10px rgba(31,36,32,.04);
   }
-  .dash-list-card{ overflow:visible; }
+  .dash-list-card{
+    overflow:visible; padding:16px 18px;
+    background:linear-gradient(180deg,#FEFDFC 0%,#FAF8F3 100%);
+  }
+  .dash-race-caption{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:10px; color:var(--muted); font-size:11.5px;
+  }
+  .dash-race-caption b{ color:var(--primary-dark); }
   .dash-row{
-    position:relative; padding:14px 0 24px;
-    border-bottom:1px solid var(--border); overflow:visible;
+    --runner-color:#B4272B;
+    --runner-dark:#8C1C1F;
+    --runner-soft:#F4DDDA;
+    position:relative;
+    padding:13px 14px 17px;
+    margin-bottom:12px;
+    border:1px solid rgba(140,108,65,.13);
+    border-radius:14px;
+    background:#fff;
+    overflow:visible;
+    box-shadow:0 5px 14px rgba(31,36,32,.045);
   }
-  .dash-row:last-child{ border-bottom:none; }
-  .dash-row.is-complete .dash-path-line-fill{ background:var(--success); }
-  .dash-row.is-offline .dash-path-line{ background:#EEECE6; }
-  .dash-row.is-offline .dash-path-line-fill{ background:#D8D5CC; }
+  .dash-row:last-child{ margin-bottom:0; }
+  .dash-row.is-complete{
+    border-color:color-mix(in srgb, var(--runner-color) 28%, white);
+    box-shadow:0 7px 20px color-mix(in srgb, var(--runner-color) 11%, transparent);
+  }
+  .dash-row.is-offline{ opacity:.72; }
+  .dash-row.is-offline .dash-path-line-fill{
+    background:linear-gradient(90deg,#CFCBC2,#BEB9AE);
+    box-shadow:none;
+  }
+  .dash-row.is-offline .dash-path-avatar{ filter:grayscale(.25) drop-shadow(0 3px 3px rgba(0,0,0,.13)); }
   .dash-row-top{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    margin-bottom:4px;
+    margin-bottom:2px;
   }
   .dash-lane-left{ display:flex; align-items:center; gap:8px; min-width:0; }
   .dash-order{
-    width:26px; height:26px; border-radius:50%; display:inline-flex;
+    width:29px; height:29px; border-radius:9px; display:inline-flex;
     align-items:center; justify-content:center; flex-shrink:0;
-    background:var(--bg); border:1px solid var(--border);
-    color:var(--muted); font-size:10.5px; font-weight:700;
+    background:var(--runner-soft); border:1px solid color-mix(in srgb, var(--runner-color) 25%, white);
+    color:var(--runner-dark); font-size:11px; font-weight:800;
   }
+  .dash-order.rank-1{ background:#FFF3C7; border-color:#E3BD45; color:#795A00; }
+  .dash-order.rank-2{ background:#F0F1F3; border-color:#B8BEC8; color:#515966; }
+  .dash-order.rank-3{ background:#F5DFCF; border-color:#C99069; color:#754A2F; }
   .dash-lane-progress{
-    color:var(--primary-dark); font-size:12px; font-weight:700; white-space:nowrap;
+    color:var(--runner-dark); font-size:12px; font-weight:800; white-space:nowrap;
   }
-  .dash-path-wrap{ margin-bottom:4px; }
+  .dash-login-badge{
+    font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px;
+  }
+  .dash-login-badge.ya{
+    background:var(--runner-soft); color:var(--runner-dark);
+    border:1px solid color-mix(in srgb, var(--runner-color) 24%, white);
+  }
+  .dash-login-badge.belum{ background:#F1EFEB; color:#817B72; border:1px solid #DDD9D1; }
+
   .dash-path-track{
-    position:relative; height:96px; margin:6px 2px 0;
+    position:relative; height:112px; margin:2px 4px 0;
     overflow:visible;
   }
-  .dash-path-line{
-    position:absolute; left:0; right:0; top:8px;
-    height:56px; border-radius:14px;
-    background:#E7DDCB;
-    box-shadow:inset 0 0 0 1px rgba(140,108,65,.08);
+  /* Garis lintasan tipis hanya sebagai petunjuk sisa perjalanan. */
+  .dash-path-guide{
+    position:absolute; left:0; right:0; top:39px;
+    height:3px; border-radius:4px;
+    background:repeating-linear-gradient(90deg,#DDD9D1 0 10px,transparent 10px 17px);
+    opacity:.9;
   }
+  /* Bar berwarna berhenti tepat di posisi avatar. */
   .dash-path-line-fill{
-    position:absolute; left:0; top:8px;
-    height:56px; border-radius:14px;
-    background:#CCBA98;
-    transition:width .45s ease;
+    position:absolute; left:0; top:13px;
+    height:54px; border-radius:14px;
+    background:linear-gradient(90deg,var(--runner-dark) 0%,var(--runner-color) 72%,color-mix(in srgb,var(--runner-color) 88%,white) 100%);
+    box-shadow:inset 0 -5px 10px rgba(0,0,0,.07),0 5px 14px color-mix(in srgb,var(--runner-color) 17%,transparent);
+    transition:width .55s cubic-bezier(.22,.7,.22,1);
+    z-index:1;
+  }
+  .dash-path-line-fill::before{
+    content:""; position:absolute; inset:8px 10px auto 12px; height:1px;
+    background:rgba(255,255,255,.28); border-radius:4px;
+  }
+  .dash-path-start{
+    position:absolute; left:-1px; top:8px; width:7px; height:64px;
+    border-radius:4px; z-index:3;
+    background:repeating-linear-gradient(180deg,#fff 0 7px,#343434 7px 14px);
+    box-shadow:0 1px 3px rgba(0,0,0,.13);
+  }
+  .dash-path-finish-box{
+    position:absolute; right:-2px; top:4px; width:34px; height:72px;
+    display:flex; align-items:center; justify-content:center; z-index:2;
   }
   .dash-path-finish{
-    position:absolute; right:12px; top:25px;
-    width:20px; height:20px; stroke:var(--primary-dark); opacity:.45;
-    z-index:2;
+    width:28px; height:28px; stroke:var(--primary-dark); opacity:.55;
+    filter:drop-shadow(0 2px 2px rgba(0,0,0,.08));
   }
   .dash-path-avatar-button{
-    position:absolute; top:36px;
-    width:58px; height:66px;
+    position:absolute; top:39px;
+    width:74px; height:84px;
     padding:0; border:none; background:transparent;
     transform:translate(-50%,-50%);
-    cursor:pointer; z-index:5;
-    transition:left .45s ease, transform .15s ease;
+    cursor:pointer; z-index:8;
+    transition:left .55s cubic-bezier(.22,.7,.22,1), transform .16s ease;
   }
   .dash-path-avatar-button:hover,
   .dash-path-avatar-button:focus-visible{
-    transform:translate(-50%,-54%);
+    transform:translate(-50%,-55%) scale(1.04);
     outline:none;
   }
+  .dash-path-avatar-button::after{
+    content:""; position:absolute; left:50%; bottom:7px;
+    width:48px; height:10px; transform:translateX(-50%);
+    border-radius:50%; background:rgba(31,36,32,.12); filter:blur(4px);
+    z-index:-1;
+  }
   .dash-path-avatar{
-    width:52px; height:62px; object-fit:contain; display:block; margin:auto;
+    width:66px; height:82px; object-fit:contain; display:block; margin:auto;
     filter:drop-shadow(0 3px 3px rgba(0,0,0,.18));
     pointer-events:none;
   }
   .dash-avatar-fallback{
-    width:42px; height:42px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center; margin:10px auto 0;
-    background:var(--primary); color:#fff; border:3px solid #fff;
-    box-shadow:0 2px 6px rgba(0,0,0,.18);
-    font-size:15px; font-weight:700;
+    width:48px; height:48px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; margin:15px auto 0;
+    background:var(--runner-color); color:#fff; border:3px solid #fff;
+    box-shadow:0 2px 7px rgba(0,0,0,.2);
+    font-size:16px; font-weight:800;
   }
+  .dash-speed-lines{
+    position:absolute; right:58%; top:27px; width:28px; height:22px;
+    opacity:.28; pointer-events:none;
+  }
+  .dash-speed-lines span{
+    display:block; height:2px; border-radius:4px; background:var(--runner-color);
+    margin:4px 0 0 auto;
+  }
+  .dash-speed-lines span:nth-child(1){ width:13px; }
+  .dash-speed-lines span:nth-child(2){ width:22px; }
+  .dash-speed-lines span:nth-child(3){ width:16px; }
+
   .dash-avatar-popover{
     display:none; position:absolute; left:50%; bottom:calc(100% + 8px);
-    transform:translateX(-50%); width:228px;
-    background:#fff; border:1px solid var(--border); border-radius:10px;
-    padding:12px; text-align:left; color:var(--text);
-    box-shadow:0 12px 28px rgba(31,36,32,.16);
-    cursor:default; z-index:20;
+    transform:translateX(-50%); width:238px;
+    background:#fff; border:1px solid color-mix(in srgb,var(--runner-color) 22%,white); border-radius:12px;
+    padding:13px; text-align:left; color:var(--text);
+    box-shadow:0 14px 32px rgba(31,36,32,.18);
+    cursor:default; z-index:30;
   }
   .dash-avatar-popover::after{
     content:""; position:absolute; left:50%; bottom:-6px;
     width:10px; height:10px; background:#fff;
-    border-right:1px solid var(--border); border-bottom:1px solid var(--border);
+    border-right:1px solid color-mix(in srgb,var(--runner-color) 22%,white);
+    border-bottom:1px solid color-mix(in srgb,var(--runner-color) 22%,white);
     transform:translateX(-50%) rotate(45deg);
   }
-  .dash-path-avatar-button.open .dash-avatar-popover{ display:block; }
-  .dash-path-avatar-button.edge-start .dash-avatar-popover{
-    left:-2px; transform:none;
-  }
-  .dash-path-avatar-button.edge-start .dash-avatar-popover::after{
-    left:28px; transform:rotate(45deg);
-  }
-  .dash-path-avatar-button.edge-end .dash-avatar-popover{
-    left:auto; right:-2px; transform:none;
-  }
-  .dash-path-avatar-button.edge-end .dash-avatar-popover::after{
-    left:auto; right:22px; transform:rotate(45deg);
-  }
-  .dash-pop-name{ display:block; font-size:13.5px; font-weight:700; color:var(--primary-dark); line-height:1.35; }
+  .dash-path-avatar-button.open .dash-avatar-popover{ display:block; animation:dashPop .15s ease-out; }
+  @keyframes dashPop{ from{ opacity:0; transform:translateX(-50%) translateY(4px); } to{ opacity:1; transform:translateX(-50%) translateY(0); } }
+  .dash-path-avatar-button.edge-start .dash-avatar-popover{ left:-4px; transform:none; }
+  .dash-path-avatar-button.edge-start.open .dash-avatar-popover{ animation:none; }
+  .dash-path-avatar-button.edge-start .dash-avatar-popover::after{ left:31px; transform:rotate(45deg); }
+  .dash-path-avatar-button.edge-end .dash-avatar-popover{ left:auto; right:-4px; transform:none; }
+  .dash-path-avatar-button.edge-end.open .dash-avatar-popover{ animation:none; }
+  .dash-path-avatar-button.edge-end .dash-avatar-popover::after{ left:auto; right:27px; transform:rotate(45deg); }
+  .dash-pop-name{ display:block; font-size:14px; font-weight:800; color:var(--runner-dark); line-height:1.35; }
   .dash-pop-class{ display:block; margin-top:2px; font-size:11.5px; color:var(--muted); }
   .dash-pop-status{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
-    margin:10px 0 8px; padding-top:8px; border-top:1px solid var(--border);
-    font-size:11.5px;
+    margin:10px 0 8px; padding:8px 9px; border-radius:8px;
+    background:var(--runner-soft); color:var(--runner-dark); font-size:11.5px;
   }
-  .dash-pop-status b{ color:var(--text); }
+  .dash-pop-status b{ color:var(--runner-dark); }
   .dash-pop-task{
     display:flex; align-items:center; justify-content:space-between; gap:8px;
-    padding:4px 0; font-size:11.5px; color:var(--muted);
+    padding:4px 1px; font-size:11.5px; color:var(--muted);
   }
   .dash-pop-task.done{ color:var(--success); }
   .dash-pop-task.pending{ color:var(--danger); }
+
   .dash-checkpoint{
-    position:absolute; top:70px; transform:translateX(-50%);
+    position:absolute; top:79px; transform:translateX(-50%);
     display:flex; flex-direction:column; align-items:center;
-    min-width:68px; pointer-events:none;
+    min-width:74px; pointer-events:none; z-index:4;
   }
   .dash-checkpoint.edge-end{ transform:translateX(-100%); align-items:flex-end; }
   .dash-checkpoint-dot{
-    width:8px; height:8px; border-radius:50%;
-    background:#fff; border:2px solid var(--border); margin-bottom:4px;
+    width:9px; height:9px; border-radius:50%;
+    background:#fff; border:2px solid #CFCAC1; margin-bottom:4px;
+    box-shadow:0 0 0 3px #fff;
   }
-  .dash-checkpoint.done .dash-checkpoint-dot{ background:var(--success); border-color:var(--success); }
+  .dash-checkpoint.done .dash-checkpoint-dot{ background:var(--runner-color); border-color:var(--runner-color); }
   .dash-checkpoint-label{
-    font-size:9.5px; font-weight:600; color:var(--muted);
-    white-space:nowrap;
+    font-size:9.5px; font-weight:700; color:var(--muted); white-space:nowrap;
   }
-  .dash-checkpoint.done .dash-checkpoint-label{ color:var(--success); }
+  .dash-checkpoint.done .dash-checkpoint-label{ color:var(--runner-dark); }
 
   @media (max-width:720px){
     .dash-day-note{ flex-direction:column; }
     .dash-day-count{ width:100%; }
-    .dash-avatar-popover{ width:205px; }
-    .dash-checkpoint-label{ font-size:8.5px; }
+    .dash-list-card{ padding:12px 9px; }
+    .dash-row{ padding-left:9px; padding-right:9px; }
+    .dash-avatar-popover{ width:210px; }
+    .dash-path-avatar{ width:58px; height:75px; }
+    .dash-path-avatar-button{ width:65px; height:78px; }
+    .dash-checkpoint-label{ font-size:8px; }
+    .dash-lane-progress{ font-size:10.5px; }
   }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1188,6 +1262,26 @@ const AVATAR_DATA = Object.freeze(
     Object.entries(AVATAR_FILE_IDS).map(([id, fileId]) => [id, driveAvatarThumbnail(fileId)])
   )
 );
+
+/* Warna lintasan disesuaikan dengan warna utama baju masing-masing avatar. */
+const AVATAR_RACE_THEME = Object.freeze({
+  1:  { main:'#70584B', dark:'#4E3B32', soft:'#E7DDD7' }, // cokelat
+  2:  { main:'#56866A', dark:'#365D48', soft:'#DDEBE2' }, // hijau
+  3:  { main:'#23385F', dark:'#172642', soft:'#DCE3EF' }, // navy
+  4:  { main:'#C97D88', dark:'#9E5965', soft:'#F4DEE2' }, // dusty pink
+  5:  { main:'#8C78B5', dark:'#66548C', soft:'#E8E2F2' }, // lavender
+  6:  { main:'#9B7B5B', dark:'#6C523B', soft:'#ECE2D7' }, // taupe
+  7:  { main:'#343840', dark:'#1E2126', soft:'#DFE1E4' }, // charcoal
+  8:  { main:'#A28B68', dark:'#6F5D43', soft:'#ECE6DC' }, // beige
+  9:  { main:'#20375F', dark:'#142541', soft:'#DCE4F0' }, // navy
+  10: { main:'#496A4E', dark:'#2F4934', soft:'#DEE9E0' }, // army green
+  11: { main:'#2D4778', dark:'#1B2D50', soft:'#DDE4F1' }, // royal navy
+  12: { main:'#5E7C64', dark:'#3D5943', soft:'#DFE9E1' }  // sage green
+});
+
+function getAvatarRaceTheme(avatarId){
+  return AVATAR_RACE_THEME[Number(avatarId)] || { main:'#B4272B', dark:'#8C1C1F', soft:'#F4DDDA' };
+}
 
 function avatarImageError(img, avatarId){
   if(!img || img.dataset.fallbackUsed === '1') return;
@@ -2848,13 +2942,12 @@ async function loadDashboard(){
         <div><strong>${escapeHtml(formatTanggalDashboard(res.tanggal))}</strong><span>Sabtu dan Minggu tidak memiliki laporan wajib. Data hari kerja sebelumnya tetap tersimpan di spreadsheet.</span></div>
         <div class="dash-day-count">0 laporan</div>
       </div>
-      <div class="empty-state"><div class="icon">—</div>Tidak ada perjalanan laporan hari ini.</div>
+      <div class="empty-state"><div class="icon">—</div>Tidak ada perlombaan laporan hari ini.</div>
     `;
     return;
   }
 
-  // Frontend ikut mengurutkan agar urutan tetap benar walau backend lama
-  // belum sempat dideploy: sudah login dahulu, lalu progres terbesar.
+  // Prioritas: sudah login, kemudian progres tertinggi, lalu nama.
   const data = (res.data || []).slice().sort((a, b) => {
     if(Boolean(a.sudahLogin) !== Boolean(b.sudahLogin)) return a.sudahLogin ? -1 : 1;
     if(Number(a.persentase) !== Number(b.persentase)) return Number(b.persentase) - Number(a.persentase);
@@ -2873,7 +2966,7 @@ async function loadDashboard(){
     <div class="dash-day-note">
       <div>
         <strong>${escapeHtml(formatTanggalDashboard(res.tanggal))}</strong>
-        <span>${laporanText} Progres akan dihitung ulang otomatis setiap berganti hari.</span>
+        <span>${laporanText} Avatar dan bar berwarna akan bergerak seperti balapan setiap laporan selesai.</span>
       </div>
       <div class="dash-day-count">${jumlahLaporanHariIni} laporan</div>
     </div>
@@ -2882,7 +2975,10 @@ async function loadDashboard(){
       <div class="dash-summary-box"><div class="num" style="color:var(--success)">${selesai100Count}</div><div class="lbl">Login + Semua Selesai</div></div>
       <div class="dash-summary-box"><div class="num" style="color:var(--danger)">${belumLoginCount}</div><div class="lbl">Belum Login Hari Ini</div></div>
     </div>
-    <div class="card dash-list-card"><div id="dash-list"></div></div>
+    <div class="card dash-list-card">
+      <div class="dash-race-caption"><span><b>Balapan laporan harian</b> · klik karakter untuk melihat nama</span><span>Start → Finish</span></div>
+      <div id="dash-list"></div>
+    </div>
   `;
 
   const list = document.getElementById('dash-list');
@@ -2896,15 +2992,20 @@ async function loadDashboard(){
     const totalTugas = Number(d.totalTugas ?? tugas.length);
     const selesaiCount = Number(d.selesaiCount ?? tugas.filter(t => t.selesai).length);
     const persentase = Math.max(0, Math.min(100, Number(d.persentase) || 0));
-    const avatarPos = 2 + (persentase * 0.96); // 0%=2%, 100%=98%
-    const avatarEdgeClass = avatarPos < 18 ? 'edge-start' : (avatarPos > 82 ? 'edge-end' : '');
+
+    // Sisakan ruang di kiri/kanan agar avatar dan bendera tidak terpotong.
+    const avatarPos = 4 + (persentase * 0.92); // 0%=4%, 100%=96%
+    const fillWidth = avatarPos;
+    const avatarEdgeClass = avatarPos < 17 ? 'edge-start' : (avatarPos > 83 ? 'edge-end' : '');
     const avatarSrc = (d.avatar && AVATAR_DATA[d.avatar]) ? AVATAR_DATA[d.avatar] : null;
     const initial = String(d.nama || '?').trim().charAt(0).toUpperCase() || '?';
     const isComplete = Boolean(d.sudahLogin) && persentase >= 100;
+    const theme = getAvatarRaceTheme(d.avatar);
+    const rankClass = index < 3 ? ` rank-${index + 1}` : '';
 
     const checkpointHtml = tugas.map((t, taskIndex) => {
       const ratio = totalTugas > 0 ? ((taskIndex + 1) / totalTugas) : 0;
-      const pos = 2 + (ratio * 96);
+      const pos = 4 + (ratio * 92);
       const edgeClass = taskIndex === tugas.length - 1 ? 'edge-end' : '';
       return `
         <span class="dash-checkpoint ${t.selesai ? 'done' : ''} ${edgeClass}" style="left:${pos}%">
@@ -2921,20 +3022,29 @@ async function loadDashboard(){
 
     const row = document.createElement('div');
     row.className = 'dash-row' + (isComplete ? ' is-complete' : '') + (!d.sudahLogin ? ' is-offline' : '');
+    row.style.setProperty('--runner-color', theme.main);
+    row.style.setProperty('--runner-dark', theme.dark);
+    row.style.setProperty('--runner-soft', theme.soft);
     row.innerHTML = `
       <div class="dash-row-top">
         <div class="dash-lane-left">
-          <span class="dash-order">${index + 1}</span>
+          <span class="dash-order${rankClass}">${index + 1}</span>
           <span class="dash-login-badge ${d.sudahLogin ? 'ya' : 'belum'}">${d.sudahLogin ? 'Sudah login' : 'Belum login'}</span>
         </div>
         <div class="dash-lane-progress">${selesaiCount}/${totalTugas} laporan · ${persentase}%</div>
       </div>
       <div class="dash-path-track">
-        <div class="dash-path-line"></div>
-        <div class="dash-path-line-fill" style="width:${persentase}%"></div>
-        <svg class="dash-path-finish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4a1 1 0 0 1 1-1h9l-2 4 2 4H6"/></svg>
+        <div class="dash-path-guide"></div>
+        <div class="dash-path-line-fill" style="width:${fillWidth}%"></div>
+        <div class="dash-path-start" aria-hidden="true"></div>
+        <div class="dash-path-finish-box" aria-hidden="true">
+          <svg class="dash-path-finish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 21V3"/><path d="M6 4h11v9H6z"/><path d="M6 4l11 9M17 4 6 13"/><path d="M11.5 4v9M6 8.5h11"/>
+          </svg>
+        </div>
         ${checkpointHtml}
         <button type="button" class="dash-path-avatar-button ${avatarEdgeClass}" style="left:${avatarPos}%" aria-expanded="false" aria-label="Lihat nama walas" onclick="toggleDashboardAvatar(event, this)">
+          <span class="dash-speed-lines" aria-hidden="true"><span></span><span></span><span></span></span>
           ${avatarSrc
             ? `<img class="dash-path-avatar" src="${avatarSrc}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="avatarImageError(this, '${escapeHtml(d.avatar)}')">`
             : `<span class="dash-avatar-fallback">${escapeHtml(initial)}</span>`
@@ -2954,6 +3064,7 @@ async function loadDashboard(){
     list.appendChild(row);
   });
 }
+
 </script>
 </body>
 </html>
