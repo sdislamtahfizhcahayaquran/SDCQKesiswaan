@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistem Kesiswaan — SDIT Cahaya Qur'an</title>
+<link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -2416,7 +2417,7 @@ async function submitAbsensiForm(){
    MODUL: PjBL
    ========================================================== */
 let pjblState = {
-  kelas:null, jenjang:null, pekan:null, daftarPekan:[], kegiatanRencana:'',
+  kelas:null, jenjang:null, pekan:null, daftarPekan:[], kegiatanRencana:'', tanggalRencana:'',
   siswa:[], nilai:{}, realita:'', kendala:'', masukan:'',
   fotoBase64:null, fotoMime:null, fotoUrlLama:''
 };
@@ -2448,45 +2449,90 @@ function renderPjBL(content){
   }
 }
 
+let pjblLoadToken = 0;
+
 async function loadPjBLPekanAktif(){
   if(!pjblState.kelas) return;
+  const requestToken = ++pjblLoadToken;
   const body = document.getElementById('pjbl-body');
-  body.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(10,110,110,0.25)"></span>Memuat data...</div>`;
+  if(!body) return;
+  body.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(10,110,110,0.25)"></span>Memuat timeline PjBL...</div>`;
 
-  const info = await callApi('getPekanAktifPjBL', { kelas: pjblState.kelas });
+  let info;
+  try{
+    info = await callApi('getPekanAktifPjBL', { kelas: pjblState.kelas });
+  }catch(err){
+    if(requestToken !== pjblLoadToken || activeModule !== 'pjbl') return;
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Gagal mengambil timeline dari Spreadsheet: ${escapeHtml(err.message || 'koneksi backend bermasalah')}</div>`;
+    return;
+  }
+
+  if(requestToken !== pjblLoadToken || activeModule !== 'pjbl' || !document.getElementById('pjbl-body')) return;
+
   if(!info.success){
-    const pesan = info.error === 'pekan_1_tidak_ditemukan'
-      ? 'Pekan 1 tidak terbaca pada sheet "Time Line". Isi kolom Pekan dengan 1 atau Pekan 1, lalu muat ulang halaman.'
-      : 'Tidak bisa membaca timeline kelas ini. Pastikan nama kelas diawali angka jenjang dan sheet "Time Line" sudah terisi.';
+    const pesanMap = {
+      pekan_1_tidak_ditemukan: 'Pekan 1 tidak ditemukan pada sheet "Time Line". Pastikan kolom Pekan berisi 1 atau Pekan 1.',
+      timeline_kosong: 'Tidak ada timeline yang berhasil dibaca dari sheet "Time Line".',
+      kelas_tidak_valid: 'Nama kelas tidak valid. Nama kelas harus diawali angka jenjang, misalnya 1 Banin A.'
+    };
+    const pesan = pesanMap[info.error] || `Timeline tidak bisa dibaca (${info.error || 'kesalahan tidak diketahui'}).`;
     body.innerHTML = `<div class="empty-state"><div class="icon">—</div>${escapeHtml(pesan)}</div>`;
     return;
   }
 
   pjblState.jenjang = info.jenjang;
   pjblState.daftarPekan = Array.isArray(info.daftarPekan)
-    ? info.daftarPekan.slice().sort((a,b) => Number(a.pekan) - Number(b.pekan))
+    ? info.daftarPekan
+        .map(p => ({
+          pekan: Number(p.pekan),
+          tanggal: String(p.tanggal || '').trim(),
+          kegiatan: String(p.kegiatan || '').trim()
+        }))
+        .filter(p => Number.isFinite(p.pekan) && p.pekan >= 1)
+        .sort((a,b) => a.pekan - b.pekan)
     : [];
 
-  // Pengaman frontend: halaman wajib membuka Pekan 1, bukan pekan aktif berdasarkan tanggal.
-  const pekanSatu = pjblState.daftarPekan.find(p => Number(p.pekan) === 1);
+  const pekanSatu = pjblState.daftarPekan.find(p => p.pekan === 1);
   if(!pekanSatu){
-    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Pekan 1 tidak ditemukan pada data timeline. Periksa kolom Pekan di sheet "Time Line".</div>`;
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Pekan 1 tidak ditemukan pada respons timeline. Periksa struktur sheet "Time Line".</div>`;
     return;
   }
+
   pjblState.pekan = 1;
+  pjblState.tanggalRencana = pekanSatu.tanggal || info.tanggalAktif || '';
+  pjblState.kegiatanRencana = pekanSatu.kegiatan || info.kegiatanRencanaAktif || '';
 
   const siswaRes = await callApi('getSiswaByKelas', { kelas: pjblState.kelas });
+  if(requestToken !== pjblLoadToken || activeModule !== 'pjbl' || !document.getElementById('pjbl-body')) return;
   pjblState.siswa = siswaRes.data || [];
 
-  await loadPjBLForPekan(1);
+  await loadPjBLForPekan(1, requestToken);
 }
 
-async function loadPjBLForPekan(pekan){
-  pjblState.pekan = pekan;
-  const pekanInfo = pjblState.daftarPekan.find(p => p.pekan.toString() === pekan.toString());
-  pjblState.kegiatanRencana = pekanInfo ? pekanInfo.kegiatan : '';
+async function loadPjBLForPekan(pekan, existingToken=null){
+  const requestToken = existingToken === null ? ++pjblLoadToken : existingToken;
+  pjblState.pekan = Number(pekan);
+  const pekanInfo = pjblState.daftarPekan.find(p => Number(p.pekan) === Number(pekan));
+  pjblState.tanggalRencana = pekanInfo ? String(pekanInfo.tanggal || '') : '';
+  pjblState.kegiatanRencana = pekanInfo ? String(pekanInfo.kegiatan || '') : '';
 
-  const existing = await callApi('getPjBLPekan', { kelas: pjblState.kelas, pekan });
+  const body = document.getElementById('pjbl-body');
+  if(!body || activeModule !== 'pjbl') return;
+
+  let existing;
+  try{
+    existing = await callApi('getPjBLPekan', { kelas: pjblState.kelas, pekan: pjblState.pekan });
+  }catch(err){
+    if(requestToken !== pjblLoadToken || activeModule !== 'pjbl') return;
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Gagal mengambil data PjBL Pekan ${escapeHtml(pjblState.pekan)}: ${escapeHtml(err.message || 'koneksi backend bermasalah')}</div>`;
+    return;
+  }
+
+  if(requestToken !== pjblLoadToken || activeModule !== 'pjbl' || !document.getElementById('pjbl-body')) return;
+  if(!existing || !existing.success){
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Data PjBL Pekan ${escapeHtml(pjblState.pekan)} tidak dapat dibaca.</div>`;
+    return;
+  }
 
   pjblState.nilai = {};
   pjblState.siswa.forEach(s => { pjblState.nilai[s.nis] = existing.nilai ? (existing.nilai[s.nis] || '') : ''; });
@@ -2506,6 +2552,7 @@ async function loadPjBLForPekan(pekan){
 
 function renderPjBLForm(sudahAda){
   const body = document.getElementById('pjbl-body');
+  if(!body || activeModule !== 'pjbl') return;
 
   if(pjblState.siswa.length === 0){
     body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Belum ada data siswa untuk kelas ini di sheet Siswa.</div>`;
@@ -2523,7 +2570,10 @@ function renderPjBLForm(sudahAda){
         <select class="pekan-select" id="pekan-select" onchange="loadPjBLForPekan(this.value)">${opsiPekan}</select>
         ${sudahAda ? '<span class="pekan-badge">Sudah ada data — mode edit</span>' : ''}
       </div>
-      <div style="font-size:13px;color:var(--muted)">${pjblState.kegiatanRencana ? pjblState.kegiatanRencana.replace(/\n/g,' — ') : 'Tidak ada rencana kegiatan tercatat untuk pekan ini.'}</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7">
+        <div><strong style="color:var(--text)">Tanggal:</strong> ${escapeHtml(pjblState.tanggalRencana || 'Belum diisi di sheet Time Line')}</div>
+        <div><strong style="color:var(--text)">Kegiatan:</strong> ${pjblState.kegiatanRencana ? escapeHtml(pjblState.kegiatanRencana).replace(/\n/g,'<br>') : '<span style="color:var(--danger)">Kolom kegiatan untuk kelas ini masih kosong atau belum terbaca.</span>'}</div>
+      </div>
     </div>
 
     <div class="card">
@@ -3385,13 +3435,16 @@ async function submitMoodPilih(mood){
 /* ==========================================================
    MODUL: DASHBOARD KERJA HARIAN
    ========================================================== */
+let dashboardLoadToken = 0;
+
 function renderDashboard(content){
+  const requestToken = ++dashboardLoadToken;
   content.innerHTML = `
     <div class="page-title">Dashboard Kerja Harian</div>
     <div class="page-sub">Avatar bergerak mengikuti laporan yang selesai pada hari ini. Klik avatar untuk melihat nama dan rinciannya.</div>
     <div id="dash-body"><div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(10,110,110,0.25)"></span>Memuat data...</div></div>
   `;
-  loadDashboard();
+  loadDashboard(requestToken);
 }
 
 function formatTanggalDashboard(tanggalYmd){
@@ -3405,9 +3458,11 @@ function formatTanggalDashboard(tanggalYmd){
   }
 }
 
-async function loadDashboard(){
+async function loadDashboard(requestToken){
   const body = document.getElementById('dash-body');
+  if(!body) return;
   const res = await callApi('getDashboardHariIni', {});
+  if(requestToken !== dashboardLoadToken || activeModule !== 'dashboard' || !document.getElementById('dash-body')) return;
   if(!res.success){
     body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Gagal memuat data dashboard.</div>`;
     return;
@@ -3458,6 +3513,7 @@ async function loadDashboard(){
   `;
 
   const list = document.getElementById('dash-list');
+  if(!list || requestToken !== dashboardLoadToken || activeModule !== 'dashboard') return;
   if(data.length === 0){
     list.innerHTML = `<div class="empty-state"><div class="icon">—</div>Belum ada data walas aktif.</div>`;
     return;
