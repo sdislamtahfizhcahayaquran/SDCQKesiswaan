@@ -2455,18 +2455,30 @@ async function loadPjBLPekanAktif(){
 
   const info = await callApi('getPekanAktifPjBL', { kelas: pjblState.kelas });
   if(!info.success){
-    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Tidak bisa menentukan pekan aktif untuk kelas ini. Pastikan nama kelas diawali angka jenjang (mis. "1 Banin A") dan sheet "Time Line" sudah terisi.</div>`;
+    const pesan = info.error === 'pekan_1_tidak_ditemukan'
+      ? 'Pekan 1 tidak terbaca pada sheet "Time Line". Isi kolom Pekan dengan 1 atau Pekan 1, lalu muat ulang halaman.'
+      : 'Tidak bisa membaca timeline kelas ini. Pastikan nama kelas diawali angka jenjang dan sheet "Time Line" sudah terisi.';
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>${escapeHtml(pesan)}</div>`;
     return;
   }
 
   pjblState.jenjang = info.jenjang;
-  pjblState.daftarPekan = info.daftarPekan;
-  pjblState.pekan = info.pekanAktif;
+  pjblState.daftarPekan = Array.isArray(info.daftarPekan)
+    ? info.daftarPekan.slice().sort((a,b) => Number(a.pekan) - Number(b.pekan))
+    : [];
+
+  // Pengaman frontend: halaman wajib membuka Pekan 1, bukan pekan aktif berdasarkan tanggal.
+  const pekanSatu = pjblState.daftarPekan.find(p => Number(p.pekan) === 1);
+  if(!pekanSatu){
+    body.innerHTML = `<div class="empty-state"><div class="icon">—</div>Pekan 1 tidak ditemukan pada data timeline. Periksa kolom Pekan di sheet "Time Line".</div>`;
+    return;
+  }
+  pjblState.pekan = 1;
 
   const siswaRes = await callApi('getSiswaByKelas', { kelas: pjblState.kelas });
   pjblState.siswa = siswaRes.data || [];
 
-  await loadPjBLForPekan(pjblState.pekan);
+  await loadPjBLForPekan(1);
 }
 
 async function loadPjBLForPekan(pekan){
