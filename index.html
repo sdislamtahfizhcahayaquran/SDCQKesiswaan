@@ -2425,7 +2425,7 @@ function renderPjBL(content){
   const isWalas = currentUser.role === 'walas';
   content.innerHTML = `
     <div class="page-title">PjBL — Project Based Learning</div>
-    <div class="page-sub">Catat nilai keaktifan, timeline kegiatan, dan foto tiap pekan proyek.</div>
+    <div class="page-sub">PjBL dimulai dari Pekan 1 sesuai timeline pada Spreadsheet. Pilih pekan lain melalui daftar pekan bila diperlukan.</div>
 
     ${!isWalas ? `
     <div class="card">
@@ -2507,7 +2507,7 @@ function renderPjBLForm(sudahAda){
   body.innerHTML = `
     <div class="card">
       <div class="card-title">
-        Pekan Berjalan
+        Pekan PjBL
         <select class="pekan-select" id="pekan-select" onchange="loadPjBLForPekan(this.value)">${opsiPekan}</select>
         ${sudahAda ? '<span class="pekan-badge">Sudah ada data — mode edit</span>' : ''}
       </div>
