@@ -1134,25 +1134,6 @@
   .ms-status{font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;background:var(--bg);border:1px solid var(--border);white-space:nowrap;}
   .ms-char-count{text-align:right;font-size:11px;color:var(--muted);margin-top:4px;}
 
-
-  /* ===== RAPOR PTS S1 ===== */
-  .rapor-status-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px;}
-  .rapor-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
-  .rapor-stat .n{font-size:20px;font-weight:800;color:var(--primary-dark);}
-  .rapor-stat .l{font-size:10.5px;color:var(--muted);margin-top:2px;}
-  .rapor-ready-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12.5px;}
-  .rapor-ready-row:last-child{border-bottom:none;}
-  .rapor-chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:10.5px;font-weight:700;border:1px solid var(--border);background:var(--bg);color:var(--muted);}
-  .rapor-chip.ok{background:#EAF5F0;color:var(--success);border-color:#C8E6D6;}
-  .rapor-chip.missing{background:#FDF0EC;color:var(--danger);border-color:#F0D6CE;}
-  .rapor-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:10px;}
-  .rapor-table{width:100%;border-collapse:collapse;min-width:760px;font-size:12px;}
-  .rapor-table th{position:sticky;top:0;background:var(--primary-light);color:var(--primary-dark);text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);font-weight:700;}
-  .rapor-table td{padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
-  .rapor-table tr:last-child td{border-bottom:none;}
-  .rapor-missing-list{display:flex;gap:5px;flex-wrap:wrap;}
-  @media(max-width:720px){.rapor-status-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-
   @media (max-width:720px){
     .layout{ flex-direction:column; }
     .sidebar{ width:100%; display:flex; overflow-x:auto; min-height:auto; padding:10px 12px; gap:4px; position:static; height:auto; border-right:none; border-bottom:1px solid var(--border); }
@@ -1793,7 +1774,6 @@ const MODULES = [
   { id:'dashboard',    label:'Dashboard Kerja',        roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderDashboard },
   { id:'absensi',      label:'Absensi (Morning Talk)', roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderAbsensi },
   { id:'pjbl',         label:'PjBL',                   roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderPjBL },
-  { id:'raporpts',     label:'Rapor PTS Semester 1',   roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderRaporPTS },
   { id:'kedisiplinan', label:'Kedisiplinan',           roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderKedisiplinan },
   { id:'masalah',      label:'Masalah Siswa',          roles:['walas','kesiswaan','pimpinan'], built:true,  render: renderMasalahSiswa },
   { id:'prestasi',     label:'Prestasi / Lomba',       roles:['walas','kesiswaan','pimpinan'], built:false },
@@ -1864,127 +1844,6 @@ function setActiveModule(id){
   } else {
     content.innerHTML = `<div class="empty-state"><div class="icon">—</div>Modul ini belum dibangun.</div>`;
   }
-}
-
-
-/* ==========================================================
-   MODUL: RAPOR PTS SEMESTER 1 — PREVIEW DATA KELAS
-   ========================================================== */
-let raporPTSState = { kelas:'', preview:null };
-
-function renderRaporPTS(content){
-  const isWalas = currentUser.role === 'walas';
-  raporPTSState.kelas = isWalas ? (currentUser.kelas || '') : '';
-  raporPTSState.preview = null;
-  content.innerHTML = `
-    <div class="page-title">Rapor PTS Semester 1</div>
-    <div class="page-sub">Pemeriksaan data satu kelas sebelum sistem membentuk PDF. Data hanya dimuat saat halaman ini dibuka.</div>
-
-    <div class="card">
-      <div class="card-title">Kelas & Periode</div>
-      ${isWalas ? `
-        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Kelas: <strong style="color:var(--primary-dark)">${escapeHtml(raporPTSState.kelas)}</strong> &nbsp;·&nbsp; Periode: <strong>S1_PTS</strong></div>
-      ` : `
-        <div class="field" style="max-width:360px">
-          <label>Kelas</label>
-          <input id="rapor-pts-kelas" type="text" placeholder="Contoh: 3A Banat" style="width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;background:var(--bg)">
-        </div>
-      `}
-      <button class="btn btn-sm" id="rapor-preview-btn" onclick="loadRaporPTSClassPreview()">Periksa Data Satu Kelas</button>
-      <div class="ms-help" style="margin-top:10px">Sistem tidak menarik semua sheet setiap kali halaman dibuka. Preview diproses hanya ketika tombol ini ditekan.</div>
-    </div>
-    <div id="rapor-pts-result"></div>
-  `;
-}
-
-async function loadRaporPTSClassPreview(){
-  const isWalas = currentUser.role === 'walas';
-  const kelas = isWalas ? currentUser.kelas : (document.getElementById('rapor-pts-kelas')?.value || '').trim();
-  const result = document.getElementById('rapor-pts-result');
-  const btn = document.getElementById('rapor-preview-btn');
-  if(!kelas){ showToast('Isi kelas terlebih dahulu.', true); return; }
-
-  raporPTSState.kelas = kelas;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Memeriksa data...';
-  result.innerHTML = `<div class="card"><span class="spinner" style="border-top-color:var(--primary);border-color:rgba(10,110,110,.25)"></span>Menggabungkan sumber data kelas ${escapeHtml(kelas)}...</div>`;
-
-  try{
-    // Satu request saja: backend membaca sumber per kelas sekali lalu membuat Map berdasarkan NIS.
-    const res = await callApi('getRaporPTSClassPreview', { kelas, periode:'S1_PTS' });
-    if(!res.success){
-      const d = res.details || {};
-      const missing = [...(d.missingSheets || []), ...(d.fastMissingSheets || [])];
-      result.innerHTML = `
-        <div class="card">
-          <div class="ms-alert"><strong>Fondasi Rapor PTS belum siap.</strong><br>${escapeHtml(res.error || 'Setup belum lengkap.')}</div>
-          ${missing.length ? `<div class="ms-help">Sheet yang perlu dibuat: ${missing.map(escapeHtml).join(', ')}</div>` : ''}
-          <div style="margin-top:14px" class="ms-help">Setelah Code.gs v2 dipasang, jalankan fungsi <strong>setupSistemV2Fast()</strong> satu kali dari Apps Script Editor.</div>
-        </div>`;
-      return;
-    }
-    raporPTSState.preview = res;
-    renderRaporPTSClassResult(res);
-  }catch(err){
-    result.innerHTML = `<div class="card"><div class="ms-alert"><strong>Preview gagal.</strong><br>${escapeHtml(err.message || 'Tidak dapat membaca data rapor.')}</div></div>`;
-  }finally{
-    btn.disabled = false;
-    btn.textContent = 'Periksa Ulang Data Kelas';
-  }
-}
-
-function renderRaporPTSClassResult(res){
-  const result = document.getElementById('rapor-pts-result');
-  const rows = res.data || [];
-  const total = rows.length;
-  const tahfizhReady = rows.filter(r => r.tahfizh && Object.keys(r.tahfizh).length).length;
-  const komentarReady = rows.filter(r => (r.komentarWalas || '').trim()).length;
-  const lengkap = rows.filter(r => !(r.completeness?.missing || []).length).length;
-  const elapsed = res.performance?.elapsedMs;
-  const warnings = res.warnings || [];
-
-  result.innerHTML = `
-    <div class="card">
-      <div class="card-title">Status Data — ${escapeHtml(res.kelas || raporPTSState.kelas)}</div>
-      <div class="rapor-status-grid">
-        <div class="rapor-stat"><div class="n">${total}</div><div class="l">Siswa</div></div>
-        <div class="rapor-stat"><div class="n">${tahfizhReady}/${total}</div><div class="l">Tahfizh ditemukan</div></div>
-        <div class="rapor-stat"><div class="n">${komentarReady}/${total}</div><div class="l">Komentar walas</div></div>
-        <div class="rapor-stat"><div class="n">${lengkap}/${total}</div><div class="l">Siap penuh</div></div>
-      </div>
-      ${typeof elapsed === 'number' ? `<div class="ms-help">Waktu penggabungan backend: ${escapeHtml(String(elapsed))} ms · mode ${escapeHtml(res.performance?.mode || '')}</div>` : ''}
-      ${warnings.length ? `<div class="ms-alert" style="margin-top:14px"><strong>Masih ada sumber yang belum dikonfigurasi.</strong><br>${warnings.map(escapeHtml).join('<br>')}</div>` : ''}
-    </div>
-
-    <div class="card">
-      <div class="card-title">Kesiapan per Siswa</div>
-      <div class="rapor-table-wrap">
-        <table class="rapor-table">
-          <thead><tr><th>Siswa</th><th>Tahfizh</th><th>Absensi</th><th>Pelanggaran</th><th>Reward</th><th>Yang Belum Ada</th></tr></thead>
-          <tbody>
-            ${rows.map(r => {
-              const miss = r.completeness?.missing || [];
-              const tah = r.tahfizh && Object.keys(r.tahfizh).length;
-              const a = r.ketidakhadiran || {};
-              const k = r.akhlakKedisiplinan?.pelanggaran || {};
-              return `<tr>
-                <td><strong>${escapeHtml(r.identitas?.nama || '-')}</strong><div class="siswa-nis">${escapeHtml(r.identitas?.nis || '')}</div></td>
-                <td><span class="rapor-chip ${tah?'ok':'missing'}">${tah?'Ada':'Belum'}</span></td>
-                <td>H ${Number(a.hadir)||0} · S ${Number(a.sakit)||0} · I ${Number(a.izin)||0} · A ${Number(a.tanpaKeterangan)||0}</td>
-                <td>${Number(k.jumlahKejadian)||0} kejadian · ${Number(k.totalPoin)||0} poin</td>
-                <td>${Number(r.akhlakKedisiplinan?.rewardPoin)||0} poin</td>
-                <td><div class="rapor-missing-list">${miss.length ? miss.map(x => `<span class="rapor-chip missing">${escapeHtml(x)}</span>`).join('') : '<span class="rapor-chip ok">Lengkap</span>'}</div></td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-sm" disabled title="Diaktifkan setelah struktur leger dan template Google Docs terpasang">Generate PDF Satu Kelas</button>
-        <span class="ms-help">Tombol PDF sengaja belum diaktifkan agar sistem tidak menghasilkan rapor dengan data TP yang belum memiliki struktur sumber.</span>
-      </div>
-    </div>
-  `;
 }
 
 /* ==========================================================
